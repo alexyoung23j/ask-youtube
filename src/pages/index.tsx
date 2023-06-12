@@ -4,9 +4,10 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import { api } from "~/utils/api";
+import { useState } from "react";
 
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  // const hello = api.example.hello.useQuery({ text: "from tRPC" });
 
   return (
     <>
@@ -45,9 +46,9 @@ const Home: NextPage = () => {
             </Link>
           </div>
           <div className={styles.showcaseContainer}>
-            <p className={styles.showcaseText}>
+            {/* <p className={styles.showcaseText}>
               {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-            </p>
+            </p> */}
             <AuthShowcase />
           </div>
         </div>
@@ -58,20 +59,56 @@ const Home: NextPage = () => {
 
 export default Home;
 
-const AuthShowcase: React.FC = () => {
+const AuthShowcase = () => {
+  const [url, setUrl] = useState("");
+  const [text, setText] = useState("");
+
   const { data: sessionData } = useSession();
 
-  const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-    undefined, // no input
-    { enabled: sessionData?.user !== undefined },
-  );
+  // const { data: secretMessage } = api.example.getSecretMessage.useQuery(
+  //   undefined, // no input
+  //   { enabled: sessionData?.user !== undefined }
+  // );
+
+  const generateTranscription =
+    api.transcribe.generateTranscription.useMutation();
+
+  const askChatBot = api.query.ask.useMutation();
 
   return (
     <div className={styles.authContainer}>
-      <p className={styles.showcaseText}>
+      <input
+        value={url}
+        onInput={(e) => {
+          setUrl(e.currentTarget.value);
+        }}
+      ></input>
+      <button
+        onClick={() => {
+          generateTranscription.mutate({ url });
+        }}
+      >
+        Transcribe
+      </button>
+
+      <input
+        value={text}
+        onInput={(e) => {
+          setText(e.currentTarget.value);
+        }}
+      ></input>
+      <button
+        onClick={() => {
+          const res = askChatBot.mutate({ url, inputText: text });
+          console.log(res);
+        }}
+      >
+        Ask
+      </button>
+      {/* <p className={styles.showcaseText}>
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
         {secretMessage && <span> - {secretMessage}</span>}
-      </p>
+      </p> */}
       <button
         className={styles.loginButton}
         onClick={sessionData ? () => void signOut() : () => void signIn()}
