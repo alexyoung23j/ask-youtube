@@ -29,6 +29,7 @@ export const env = createEnv({
     PINECONE_INDEX: z.string(),
     OPENAI_API_KEY: z.string(),
     OPENAI_ORGANIZATION_ID: z.string(),
+    PUBSUB_EMULATOR_HOST: z.string(),
   },
 
   /**
@@ -57,6 +58,7 @@ export const env = createEnv({
     PINECONE_INDEX: process.env.PINECONE_INDEX,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_ORGANIZATION_ID: process.env.OPENAI_ORGANIZATION_ID,
+    PUBSUB_EMULATOR_HOST: process.env.PUBSUB_EMULATOR_HOST,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

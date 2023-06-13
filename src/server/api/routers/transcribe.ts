@@ -16,6 +16,7 @@ import { PineconeClient } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
+import { PubSub } from "@google-cloud/pubsub";
 
 function deleteFile(filePath: string): void {
   fs.unlink(filePath, (err) => {
@@ -30,7 +31,29 @@ function deleteFile(filePath: string): void {
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY!);
 const mimetype = "audio/wav";
 
+const pubsub = new PubSub();
+const topicName = "transcription-job";
+
 export const transcriptionRouter = createTRPCRouter({
+  startTranscriptionJob: publicProcedure
+    .input(z.object({ url: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { url } = input;
+
+      const data = JSON.stringify({ url: url });
+
+      try {
+        const topic = pubsub.topic(topicName);
+        await topic.publishMessage({ data });
+        console.log("Message published to Pub/Sub.");
+      } catch (error) {
+        console.error("Error publishing message:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to start transcription job",
+        });
+      }
+    }),
   generateTranscription: publicProcedure
     .input(z.object({ url: z.string() }))
     .mutation(async ({ input, ctx }) => {

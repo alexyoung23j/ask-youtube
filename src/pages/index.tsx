@@ -71,7 +71,7 @@ const AuthShowcase = () => {
   // );
 
   const generateTranscription =
-    api.transcribe.generateTranscription.useMutation();
+    api.transcribe.startTranscriptionJob.useMutation();
 
   const askChatBot = api.query.ask.useMutation();
 

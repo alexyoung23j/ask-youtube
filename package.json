@@ -5,7 +5,8 @@
   "scripts": {
     "build": "next build",
     "start": "next dev",
-    "start-cloud-functions": "concurrently \"tsc --watch --project src/server/google-cloud\" \"nodemon --delay 2 --watch src/server/google-cloud/build/ --exec 'npx @google-cloud/functions-framework --source=src/server/google-cloud/build/ --target=getTranscription --port=3001'\"",
+    "start-cloud-functions": "concurrently \"tsc --watch --project google-cloud\" \"nodemon --delay 2 --watch google-cloud/build/ --exec 'npx @google-cloud/functions-framework --source=google-cloud/build/ --target=getTranscription --port=3001'\"",
+    "deploy-functions": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy getTranscription --runtime nodejs14 --trigger-http --source build/ --entry-point getTranscription",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "start-prod": "next start"
@@ -13,6 +14,7 @@
   "dependencies": {
     "@deepgram/sdk": "^2.1.1",
     "@google-cloud/functions-framework": "^3.2.0",
+    "@google-cloud/pubsub": "^3.7.1",
     "@next-auth/prisma-adapter": "^1.0.5",
     "@pinecone-database/pinecone": "^0.1.6",
     "@prisma/client": "^4.14.0",
@@ -22,6 +24,9 @@
     "@trpc/next": "^10.26.0",
     "@trpc/react-query": "^10.26.0",
     "@trpc/server": "^10.26.0",
+    "@types/amqplib": "^0.10.1",
+    "amqplib": "^0.10.3",
+    "concurrently": "^8.2.0",
     "langchain": "^0.0.92",
     "next": "^13.4.2",
     "next-auth": "^4.22.1",

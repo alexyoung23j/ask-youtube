@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "~/env.mjs";
 import { PineconeClient } from "@pinecone-database/pinecone";
+import { PubSub, Message } from "@google-cloud/pubsub";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
