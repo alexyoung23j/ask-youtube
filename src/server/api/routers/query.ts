@@ -21,7 +21,7 @@ export const queryRouter = createTRPCRouter({
         { pineconeIndex }
       );
 
-      const results = await vectorStore.similaritySearch(inputText, 1, {
+      const results = await vectorStore.similaritySearch(inputText, 5, {
         url: url,
       });
       console.log(results);
