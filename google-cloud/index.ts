@@ -14,6 +14,7 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import pathToFfmpeg from "ffmpeg-static";
 dotenv.config();
 
 const pool = new Pool({
@@ -73,6 +74,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   }
 
   const outputFilePath = path.join(os.tmpdir(), "output.mp3");
+  ffmpeg.setFfmpegPath(pathToFfmpeg as string); // Set FFmpeg path
 
   // CONVERT TO MP3
   try {
