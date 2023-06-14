@@ -1,53 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-import type { Request, Response } from "express";
-import { PubSub, Message } from "@google-cloud/pubsub";
+import { Request, Response } from "express";
 
-// Define a type for the data you're expecting in the Pub/Sub message
-interface MessageData {
-  url: string;
-}
+export const transcriptionJob = async (req: Request, res: Response) => {
+  const { data } = req.body;
 
-// Create an interface that extends the Message type and replaces `data` with your custom type
-interface CustomMessage extends Omit<Message, "data"> {
-  data: MessageData;
-}
+  console.log("Received HTTP request:", data);
 
-const pubsub = new PubSub();
-const subscriptionName = "transcription-subscription";
+  if (!data) {
+    console.log("Request body does not contain data field");
+    return res.status(400).send("Bad Request");
+  }
 
-export const getTranscription = async (
-  message: CustomMessage,
-  context: any
-) => {
-  // Process the message received from Pub/Sub
-  const videoUrl = JSON.parse(message.data.toString()).url;
-  console.log("Processing video:", videoUrl);
+  try {
+    // Process the data received in the HTTP request
+    const videoUrl = JSON.parse(data as string).url;
+    console.log("Processing video:", videoUrl);
 
-  // Do the video processing
+    // Do the video processing
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  // Acknowledge the message
-  message.ack();
+    res.status(200).send("Video processing completed.");
+  } catch (e) {
+    console.log("Error processing request:", e);
+    res.status(500).send("Internal Server Error");
+  }
 };
-
-const subscribeToPubSub = () => {
-  const subscription = pubsub.subscription(subscriptionName);
-
-  subscription.on("message", async (message: CustomMessage) => {
-    try {
-      await getTranscription(message, {});
-      console.log("Video processed successfully.");
-    } catch (error) {
-      console.error("Error processing video:", error);
-      // Handle the error as needed
-      message.nack();
-    }
-  });
-
-  console.log("Subscribed to Pub/Sub topic:", subscriptionName);
-};
-
-subscribeToPubSub();

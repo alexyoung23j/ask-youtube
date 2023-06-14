@@ -1,32 +1,29 @@
 "use strict";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// /* eslint-disable @typescript-eslint/no-misused-promises */
+// import type { Request, Response } from "express";
+// import { PubSub, Message } from "@google-cloud/pubsub";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTranscription = void 0;
-const pubsub_1 = require("@google-cloud/pubsub");
-const pubsub = new pubsub_1.PubSub();
-const subscriptionName = "transcription-subscription";
-const getTranscription = async (message, context) => {
-    // Process the message received from Pub/Sub
-    const videoUrl = JSON.parse(message.data.toString()).url;
-    console.log("Processing video:", videoUrl);
-    // Do the video processing
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    // Acknowledge the message
-    message.ack();
+exports.transcriptionJob = void 0;
+const transcriptionJob = async (req, res) => {
+    const { data } = req.body;
+    console.log("Received HTTP request:", data);
+    if (!data) {
+        console.log("Request body does not contain data field");
+        return res.status(400).send("Bad Request");
+    }
+    try {
+        // Process the data received in the HTTP request
+        const videoUrl = JSON.parse(data).url;
+        console.log("Processing video:", videoUrl);
+        // Do the video processing
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        res.status(200).send("Video processing completed.");
+    }
+    catch (e) {
+        console.log("Error processing request:", e);
+        res.status(500).send("Internal Server Error");
+    }
 };
-exports.getTranscription = getTranscription;
-const subscribeToPubSub = () => {
-    const subscription = pubsub.subscription(subscriptionName);
-    subscription.on("message", async (message) => {
-        try {
-            await (0, exports.getTranscription)(message, {});
-            console.log("Video processed successfully.");
-        }
-        catch (error) {
-            console.error("Error processing video:", error);
-            // Handle the error as needed
-            message.nack();
-        }
-    });
-    console.log("Subscribed to Pub/Sub topic:", subscriptionName);
-};
-subscribeToPubSub();
+exports.transcriptionJob = transcriptionJob;

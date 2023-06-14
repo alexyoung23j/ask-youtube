@@ -12,11 +12,12 @@ import ffmpeg from "fluent-ffmpeg";
 import type { PrerecordedTranscriptionResponse } from "@deepgram/sdk/dist/types";
 import { Deepgram } from "@deepgram/sdk";
 import { TRPCError } from "@trpc/server";
-import { PineconeClient } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { PubSub } from "@google-cloud/pubsub";
+
+import axios from "axios";
 
 function deleteFile(filePath: string): void {
   fs.unlink(filePath, (err) => {
@@ -28,11 +29,11 @@ function deleteFile(filePath: string): void {
   });
 }
 
+const cloudFunctionUrl =
+  "https://us-central1-ask-youtube-dev.cloudfunctions.net/transcriptionJob";
+
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY!);
 const mimetype = "audio/wav";
-
-const pubsub = new PubSub();
-const topicName = "transcription-job";
 
 export const transcriptionRouter = createTRPCRouter({
   startTranscriptionJob: publicProcedure
@@ -43,15 +44,10 @@ export const transcriptionRouter = createTRPCRouter({
       const data = JSON.stringify({ url: url });
 
       try {
-        const topic = pubsub.topic(topicName);
-        await topic.publishMessage({ data });
-        console.log("Message published to Pub/Sub.");
-      } catch (error) {
-        console.error("Error publishing message:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Unable to start transcription job",
-        });
+        await axios.post(cloudFunctionUrl, { data });
+        console.log("fired off transcription job");
+      } catch (e) {
+        console.log(e);
       }
     }),
   generateTranscription: publicProcedure

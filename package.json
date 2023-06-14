@@ -5,8 +5,8 @@
   "scripts": {
     "build": "next build",
     "start": "next dev",
-    "start-cloud-functions": "concurrently \"tsc --watch --project google-cloud\" \"nodemon --delay 2 --watch google-cloud/build/ --exec 'npx @google-cloud/functions-framework --source=google-cloud/build/ --target=getTranscription --port=3001'\"",
-    "deploy-functions": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy getTranscription --runtime nodejs14 --trigger-http --source build/ --entry-point getTranscription",
+    "start-cloud-functions": "concurrently \"tsc --watch --project google-cloud\" \"nodemon --delay 2 --watch google-cloud/build/ --exec 'npx @google-cloud/functions-framework --source=google-cloud/build/ --target=transcriptionJob --port=3001'\"",
+    "deploy-functions": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy transcriptionJob --runtime nodejs14 --trigger-http --source build/ --entry-point transcriptionJob",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "start-prod": "next start"

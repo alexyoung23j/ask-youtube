@@ -30,6 +30,7 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string(),
     OPENAI_ORGANIZATION_ID: z.string(),
     PUBSUB_EMULATOR_HOST: z.string(),
+    GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string(),
   },
 
   /**
@@ -59,6 +60,8 @@ export const env = createEnv({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_ORGANIZATION_ID: process.env.OPENAI_ORGANIZATION_ID,
     PUBSUB_EMULATOR_HOST: process.env.PUBSUB_EMULATOR_HOST,
+    GOOGLE_APPLICATION_CREDENTIALS_JSON:
+      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
