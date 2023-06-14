@@ -73,7 +73,7 @@ const AuthShowcase = () => {
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
 
-  const askChatBot = api.query.ask.useMutation();
+  const askChatBot = api.query.sendMessage.useMutation();
 
   return (
     <div className={styles.authContainer}>

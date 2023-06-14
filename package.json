@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "start": "next dev",
+    "start": "yarn --cwd prisma prisma db push && next dev",
     "start-cloud-functions": "concurrently \"tsc --watch --project google-cloud\" \"nodemon --delay 2 --watch google-cloud/build/ --exec 'npx @google-cloud/functions-framework --source=google-cloud/build/ --target=transcriptionJob --port=3001'\"",
     "deploy-functions": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy transcriptionJob --runtime nodejs18 --trigger-http --source build/ --entry-point transcriptionJob",
     "postinstall": "prisma generate",
