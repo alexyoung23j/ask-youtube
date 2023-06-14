@@ -2,6 +2,9 @@
   "name": "transcriber",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=15.0.0"
+  },
   "dependencies": {
     "@deepgram/sdk": "^2.1.1",
     "@google-cloud/functions-framework": "^3.2.0",
