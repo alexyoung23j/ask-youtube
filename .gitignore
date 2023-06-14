@@ -43,3 +43,6 @@ yarn-error.log*
 
 # Key
 /keys
+/google-cloud/build
+/google-cloud/node_modules
+/google-cloud/.env

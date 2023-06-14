@@ -29,8 +29,7 @@ export const env = createEnv({
     PINECONE_INDEX: z.string(),
     OPENAI_API_KEY: z.string(),
     OPENAI_ORGANIZATION_ID: z.string(),
-    PUBSUB_EMULATOR_HOST: z.string(),
-    GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string(),
+    CLOUD_FUNCTION_URL: z.string(),
   },
 
   /**
@@ -59,9 +58,7 @@ export const env = createEnv({
     PINECONE_INDEX: process.env.PINECONE_INDEX,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_ORGANIZATION_ID: process.env.OPENAI_ORGANIZATION_ID,
-    PUBSUB_EMULATOR_HOST: process.env.PUBSUB_EMULATOR_HOST,
-    GOOGLE_APPLICATION_CREDENTIALS_JSON:
-      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+    CLOUD_FUNCTION_URL: process.env.CLOUD_FUNCTION_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

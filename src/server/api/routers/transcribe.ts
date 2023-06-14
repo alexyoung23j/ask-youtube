@@ -15,7 +15,6 @@ import { TRPCError } from "@trpc/server";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { PubSub } from "@google-cloud/pubsub";
 
 import axios from "axios";
 
@@ -29,9 +28,6 @@ function deleteFile(filePath: string): void {
   });
 }
 
-const cloudFunctionUrl =
-  "https://us-central1-ask-youtube-dev.cloudfunctions.net/transcriptionJob";
-
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY!);
 const mimetype = "audio/wav";
 
@@ -41,10 +37,22 @@ export const transcriptionRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { url } = input;
 
-      const data = JSON.stringify({ url: url });
+      const existingVideo = await ctx.prisma.video.findFirst({
+        where: {
+          url: url,
+        },
+      });
+
+      if (existingVideo) {
+        // Handle differently
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Video already exists",
+        });
+      }
 
       try {
-        await axios.post(cloudFunctionUrl, { data });
+        void axios.post(process.env.CLOUD_FUNCTION_URL as string, { url: url });
         console.log("fired off transcription job");
       } catch (e) {
         console.log(e);
@@ -152,11 +160,13 @@ export const transcriptionRouter = createTRPCRouter({
           }
         }
 
+        console.log("time1:", new Date());
         const pineconeIndex = ctx.pinecone.Index(process.env.PINECONE_INDEX!);
 
         await PineconeStore.fromDocuments(documents, new OpenAIEmbeddings(), {
           pineconeIndex,
         });
+        console.log("time2:", new Date());
 
         await ctx.prisma.video.create({
           data: {
