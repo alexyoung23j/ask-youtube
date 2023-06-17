@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -30,6 +32,70 @@ import {
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
+import { StructuredOutputParser } from "langchain/output_parsers";
+import { Document } from "langchain/dist/docstore";
+
+interface DocumentMetadata {
+  paragraphIndex: number;
+  start: number;
+  sentenceIndex: number;
+  [key: string]: any;
+}
+
+const buildDocumentsForPrompt = ({
+  transcript,
+  documents,
+}: {
+  transcript: Array<{
+    sentences: Array<{ text: string }>;
+  }>;
+  documents: Array<[Document<DocumentMetadata>, number]>;
+}): Array<{
+  paragraphIndex: number;
+  paragraphText: string;
+  snippetStartTime: number;
+}> => {
+  // Initialize an empty array to store the result
+  const result: Array<{
+    paragraphIndex: number;
+    paragraphText: string;
+    snippetStartTime: number;
+  }> = [];
+
+  // Go through each document
+  documents.forEach(([document, _]) => {
+    // Access metadata fields assuming they exist (no type checking)
+    const paragraphIndex = document.metadata.paragraphIndex;
+    const startTime = document.metadata.start;
+    const sentenceIndex = document.metadata.sentenceIndex;
+
+    // Find the corresponding transcript
+    const correspondingTranscript = transcript[paragraphIndex];
+
+    if (correspondingTranscript) {
+      // Extract the specified sentence and its neighbors
+      const sentences = correspondingTranscript.sentences;
+      const startIdx = Math.max(0, sentenceIndex - 1);
+      const endIdx = Math.min(sentences.length, sentenceIndex + 2);
+      const selectedSentences = sentences.slice(startIdx, endIdx);
+
+      // Concatenate selected sentences
+      let paragraphText = `${paragraphIndex + 1}.`;
+      selectedSentences.forEach((sentence, idx) => {
+        paragraphText += `${sentence.text} `;
+      });
+
+      // Push to the result array
+      result.push({
+        paragraphIndex: paragraphIndex,
+        paragraphText: paragraphText.trim(),
+        snippetStartTime: startTime,
+      });
+    }
+  });
+
+  return result;
+};
 
 export const queryRouter = createTRPCRouter({
   sendMessage: publicProcedure
@@ -55,6 +121,9 @@ export const queryRouter = createTRPCRouter({
         streaming: true,
       });
 
+      const transcription = video.transcription;
+
+      // Load in documents
       const pinecone = await getPineconeClient();
       const pineconeIndex = pinecone.Index(
         process.env.PINECONE_INDEX as string
@@ -63,6 +132,21 @@ export const queryRouter = createTRPCRouter({
         new OpenAIEmbeddings(),
         { pineconeIndex }
       );
+
+      const relevantDocuments = await vectorStore.similaritySearchWithScore(
+        inputText,
+        3,
+        { url: url }
+      );
+
+      const parsedDocumentMap = buildDocumentsForPrompt({
+        documents: relevantDocuments as Array<
+          [Document<DocumentMetadata>, number]
+        >,
+        transcript: transcription as Array<{
+          sentences: Array<{ text: string }>;
+        }>,
+      });
 
       // check if we have previous conversation history, if so, use it.
       const pastMessages: BaseChatMessage[] = [
@@ -85,8 +169,11 @@ export const queryRouter = createTRPCRouter({
             All inputs should be related to the documents or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
             Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. 
 
+            {format_instructions}
+            Be talktaive and specific!
+
             Human Question: {input}
-            AI Answer:`;
+            AI Answer: `;
 
       const chatPrompt = ChatPromptTemplate.fromPromptMessages([
         SystemMessagePromptTemplate.fromTemplate(PROMPT),
@@ -103,11 +190,25 @@ export const queryRouter = createTRPCRouter({
         prompt: chatPrompt,
       });
 
+      const parser = StructuredOutputParser.fromZodSchema(
+        z.object({
+          answer: z.string().describe("answer to the user's question"),
+          usedDocumentNumbers: z
+            .array(z.string())
+            .describe(
+              "the numbers of the documents actually used to answer the user's question. The numbers are provided in the context."
+            ),
+        })
+      );
+
+      const formatInstructions = parser.getFormatInstructions();
+
       const results = await chain.call(
         {
           history: pastMessages,
           input: inputText,
-          context: ["Kim was a beast.", "Kim was the leader of north korea"],
+          format_instructions: formatInstructions,
+          context: parsedDocumentMap.map((doc) => doc.paragraphText).join("\n"),
         },
         [
           {
@@ -117,5 +218,7 @@ export const queryRouter = createTRPCRouter({
           },
         ]
       );
+
+      console.log(await parser.parse(results.response as string));
     }),
 });

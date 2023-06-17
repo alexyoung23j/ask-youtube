@@ -62,6 +62,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
 
   const videoInfo = await ytdl.getInfo(videoUrl);
 
+  console.log("Starting video download", new Date());
   // DOWNLOAD VIDEO
   try {
     stream = ytdl(videoUrl, {
@@ -103,7 +104,8 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     const transcriptionResp: PrerecordedTranscriptionResponse =
       (await deepgram.transcription.preRecorded(source, {
         smart_format: true,
-        model: "nova",
+        model: "base",
+        video: true,
         punctuate: true,
         times: true,
         paragraphs: true,
@@ -128,7 +130,8 @@ export const transcriptionJob = async (req: Request, res: Response) => {
         continue;
       }
 
-      for (const sentence of paragraph.sentences) {
+      for (let j = 0; j < paragraph.sentences.length; j++) {
+        const sentence = paragraph.sentences[j];
         documents.push(
           new Document({
             metadata: {
@@ -136,6 +139,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
               url: videoUrl,
               end: sentence.end,
               paragraphIndex: i,
+              sentenceIndex: j,
             },
             pageContent: sentence.text,
           })
