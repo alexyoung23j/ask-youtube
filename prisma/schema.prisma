@@ -44,7 +44,7 @@ model Message {
   chat            ChatHistory @relation(fields: [chatId], references: [id])
   sender          SenderType  @default(AI)
   content         String
-  videoTimestamps Int[]    @default([])
+  videoTimestamps Float[]    @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

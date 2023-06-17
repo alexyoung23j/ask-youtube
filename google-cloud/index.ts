@@ -47,6 +47,7 @@ function deleteFile(filePath: string): void {
 }
 
 export const transcriptionJob = async (req: Request, res: Response) => {
+  console.log("started job", new Date());
   const { url } = req.body;
   if (!url) {
     console.log("Request body does not contain data field");

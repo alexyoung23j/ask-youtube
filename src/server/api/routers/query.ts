@@ -33,7 +33,8 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { StructuredOutputParser } from "langchain/output_parsers";
-import { Document } from "langchain/dist/docstore";
+import type { Document } from "langchain/dist/docstore";
+import type { ChatHistory } from "@prisma/client";
 
 interface DocumentMetadata {
   paragraphIndex: number;
@@ -75,12 +76,12 @@ const buildDocumentsForPrompt = ({
     if (correspondingTranscript) {
       // Extract the specified sentence and its neighbors
       const sentences = correspondingTranscript.sentences;
-      const startIdx = Math.max(0, sentenceIndex - 1);
+      const startIdx = Math.max(0, sentenceIndex - 2);
       const endIdx = Math.min(sentences.length, sentenceIndex + 2);
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
       // Concatenate selected sentences
-      let paragraphText = `${paragraphIndex + 1}.`;
+      let paragraphText = `${paragraphIndex}.`;
       selectedSentences.forEach((sentence, idx) => {
         paragraphText += `${sentence.text} `;
       });
@@ -99,7 +100,13 @@ const buildDocumentsForPrompt = ({
 
 export const queryRouter = createTRPCRouter({
   sendMessage: publicProcedure
-    .input(z.object({ inputText: z.string(), url: z.string() }))
+    .input(
+      z.object({
+        inputText: z.string(),
+        url: z.string(),
+        chatId: z.string().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       const { inputText, url } = input;
 
@@ -116,9 +123,79 @@ export const queryRouter = createTRPCRouter({
         });
       }
 
+      const user = await ctx.prisma.user.findFirst({
+        where: {
+          id: ctx.session?.user?.id,
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to find user",
+        });
+      }
+
+      let chatHistory: ChatHistory | null;
+
+      if (input.chatId) {
+        chatHistory = await ctx.prisma.chatHistory.findFirst({
+          where: {
+            id: input.chatId,
+          },
+          include: {
+            messages: {
+              orderBy: {
+                createdAt: "asc",
+              },
+            },
+          },
+        });
+        if (!chatHistory) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Unable to find chat history",
+          });
+        }
+      } else {
+        chatHistory = await ctx.prisma.chatHistory.create({
+          data: {
+            videoUrl: url,
+            userId: user?.id,
+          },
+        });
+      }
+
+      const chatId = chatHistory?.id;
+
+      if (!chatHistory) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to find chat history",
+        });
+      }
+
+      const messages = await ctx.prisma.message.findMany({
+        where: {
+          chatId: chatId,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
       const model = new ChatOpenAI({
         modelName: "gpt-4",
         streaming: true,
+      });
+
+      const userMessage = await ctx.prisma.message.create({
+        data: {
+          content: inputText,
+          sender: "USER",
+          videoTimestamps: [],
+          chatId: chatId,
+        },
       });
 
       const transcription = video.transcription;
@@ -149,10 +226,13 @@ export const queryRouter = createTRPCRouter({
       });
 
       // check if we have previous conversation history, if so, use it.
-      const pastMessages: BaseChatMessage[] = [
-        new HumanChatMessage("Who was the original kim?"),
-        new AIChatMessage("Kim il sung was the leader of north korea"),
-      ];
+      const pastMessages: BaseChatMessage[] = messages.map((message) => {
+        if (message.sender === "USER") {
+          return new HumanChatMessage(message.content);
+        } else {
+          return new AIChatMessage(message.content);
+        }
+      });
 
       // Use this previous history with the new question to formulate a standalone question
       const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. 
@@ -213,12 +293,40 @@ export const queryRouter = createTRPCRouter({
         [
           {
             handleLLMNewToken(token: string) {
-              console.log(token);
+              // console.log(token);
             },
           },
         ]
       );
 
-      console.log(await parser.parse(results.response as string));
+      const res = await parser.parse(results.response as string);
+
+      const videoTimestamps = res.usedDocumentNumbers.map((num: string) => {
+        try {
+          const document = parsedDocumentMap.find(
+            (doc) => doc.paragraphIndex === parseInt(num)
+          );
+          const startTime = document?.snippetStartTime;
+          return startTime;
+        } catch (e) {
+          console.log(e);
+          return;
+        }
+      });
+
+      const responseMessage = await ctx.prisma.message.create({
+        data: {
+          content: res.answer,
+          sender: "AI",
+          videoTimestamps: videoTimestamps as number[],
+          chatId: chatId,
+        },
+      });
+
+      console.log(responseMessage);
+
+      return {
+        status: "complete",
+      };
     }),
 });
