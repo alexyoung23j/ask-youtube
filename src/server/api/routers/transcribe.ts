@@ -32,6 +32,7 @@ export const transcriptionRouter = createTRPCRouter({
 
       if (existingVideo) {
         // Handle differently
+        console.log("video already exists in db");
         return;
       }
 

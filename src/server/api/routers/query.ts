@@ -9,6 +9,8 @@ import {
   RetrievalQAChain,
   loadQARefineChain,
   ConversationalRetrievalQAChain,
+  ConversationChain,
+  LLMChain,
 } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -21,6 +23,13 @@ import {
   AIChatMessage,
   BaseChatMessage,
 } from "langchain/schema";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+} from "langchain/prompts";
 
 export const queryRouter = createTRPCRouter({
   sendMessage: publicProcedure
@@ -41,10 +50,8 @@ export const queryRouter = createTRPCRouter({
         });
       }
 
-      // check if we have previous conversation history, if so, use it.
-
       const model = new ChatOpenAI({
-        modelName: "gpt-3.5-turbo",
+        modelName: "gpt-4",
         streaming: true,
       });
 
@@ -57,40 +64,58 @@ export const queryRouter = createTRPCRouter({
         { pineconeIndex }
       );
 
-      const pastMessages: BaseChatMessage[] = [];
+      // check if we have previous conversation history, if so, use it.
+      const pastMessages: BaseChatMessage[] = [
+        new HumanChatMessage("Who was the original kim?"),
+        new AIChatMessage("Kim il sung was the leader of north korea"),
+      ];
 
-      const chain2 = ConversationalRetrievalQAChain.fromLLM(
-        model,
-        vectorStore.asRetriever(5, {
-          url: url,
+      // Use this previous history with the new question to formulate a standalone question
+      const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. 
+            If the AI does not know the answer to a question, it truthfully says it does not know.           
+            Current conversation:
+            {history}
+            
+            In addition, use the following pieces of context, along with your general knowledge of the subject as an extremely intelligent,
+            unbiased, and well informed person, to answer the users question if appropriate. 
+            If you don't know the answer, just say that the video doesn't provide a good answer, don't try to make up an answer.
+            ----------------
+            {context}
+             
+            All inputs should be related to the documents or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
+            Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. 
+
+            Human Question: {input}
+            AI Answer:`;
+
+      const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+        SystemMessagePromptTemplate.fromTemplate(PROMPT),
+        HumanMessagePromptTemplate.fromTemplate("{input}"),
+      ]);
+
+      const chain = new ConversationChain({
+        llm: model,
+        memory: new BufferMemory({
+          chatHistory: new ChatMessageHistory(pastMessages),
+          inputKey: "history",
         }),
-        {
-          returnSourceDocuments: true,
-          memory: new BufferMemory({
-            chatHistory: new ChatMessageHistory(pastMessages),
-            memoryKey: "chat_history", // Must be set to "chat_history",
-            inputKey: "question", // The key for the input to the chain
-            outputKey: "text", // The key for the final conversational output of the chain
-            returnMessages: true, // If using with a chat model
-          }),
-        }
-      );
+        // verbose: true,
+        prompt: chatPrompt,
+      });
 
-      try {
-        const results = await chain2.call({ question: inputText }, [
+      const results = await chain.call(
+        {
+          history: pastMessages,
+          input: inputText,
+          context: ["Kim was a beast.", "Kim was the leader of north korea"],
+        },
+        [
           {
             handleLLMNewToken(token: string) {
-              // console.log(token);
-              // TODO: Websockets streaming shit
+              console.log(token);
             },
           },
-        ]);
-      } catch (e) {
-        console.log("error", e);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Unable to get response",
-        });
-      }
+        ]
+      );
     }),
 });
