@@ -66,7 +66,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   // DOWNLOAD VIDEO
   try {
     stream = ytdl(videoUrl, {
-      quality: "highestaudio",
+      quality: "lowestaudio",
       filter: "audioonly",
     });
   } catch (e) {
@@ -165,7 +165,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     ];
 
     const client = await pool.connect();
-    const result = await client.query(query, values);
+    await client.query(query, values);
     client.release();
     console.log("Video record inserted successfully");
 
