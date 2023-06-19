@@ -4,7 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import { api } from "~/utils/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChat, useCompletion } from "ai/react";
 
 const Home: NextPage = () => {
@@ -84,19 +84,13 @@ const AuthShowcase = () => {
 
   const { data: sessionData } = useSession();
 
-  // const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-  //   undefined, // no input
-  //   { enabled: sessionData?.user !== undefined }
-  // );
-
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
 
-  const askChatBot = api.query.sendMessage.useMutation();
-
   const generateResponse = async () => {
     try {
-      await complete(text);
+      const res = await complete(text);
+      console.log("im doneee", res);
     } catch (e) {
       console.error(e);
     }

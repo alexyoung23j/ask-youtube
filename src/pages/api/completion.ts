@@ -85,7 +85,7 @@ const buildDocumentsForPrompt = ({
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
       // Concatenate selected sentences
-      let paragraphText = `${paragraphIndex}.`;
+      let paragraphText = `DOCUMENT INDEX: ${paragraphIndex} DOCUMENT: `;
       selectedSentences.forEach((sentence, idx) => {
         paragraphText += `${sentence.text} `;
       });
@@ -158,7 +158,7 @@ export default async function handler(
       },
     });
     if (!chatHistory) {
-      res.status(405).end("Chat history id not found");
+      return res.status(500).end("Chat history id not found");
     }
   } else {
     chatHistory = await prisma.chatHistory.create({
@@ -172,10 +172,7 @@ export default async function handler(
   const chatId = chatHistory?.id;
 
   if (!chatHistory) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Unable to find chat history",
-    });
+    return res.status(500).end("Chat history id not found");
   }
 
   const messages = await prisma.message.findMany({
@@ -192,7 +189,7 @@ export default async function handler(
       content: inputText as string,
       sender: "USER",
       videoTimestamps: [],
-      chatId: chatId as string,
+      chatId: chatId,
     },
   });
 
@@ -280,7 +277,7 @@ export default async function handler(
       chatHistory: new ChatMessageHistory(pastMessages),
       inputKey: "history",
     }),
-    // verbose: true,
+    // verbose: true, // TOGGLE ON FOR PROMPT REVIEW
     prompt: chatPrompt,
   });
 
@@ -317,19 +314,21 @@ export default async function handler(
             }
           );
 
-          await prisma.message.create({
+          const responseMessage = await prisma.message.create({
             data: {
               content: parsedAnswer.answer,
               sender: "AI",
               videoTimestamps: videoTimestamps as number[],
-              chatId: chatId as string,
+              chatId: chatId,
             },
           });
+
+          console.log(responseMessage);
         },
       },
     ]
   );
 
   // Streams to the client
-  streamToResponse(stream, res);
+  return streamToResponse(stream, res);
 }

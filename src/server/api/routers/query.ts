@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+// DEPRECATED: This file is no longer used. It has been replaced by src/server/api/completion.ts
 import { z } from "zod";
 import {
   createTRPCRouter,
