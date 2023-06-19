@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 import { useEffect, useState } from "react";
 import { useChat, useCompletion } from "ai/react";
+import useCustomCompletion from "~/hooks/useCustomCompletion";
 
 const Home: NextPage = () => {
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -64,23 +65,35 @@ const AuthShowcase = () => {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [chatId, setChatId] = useState("");
-  const {
-    completion,
-    complete,
-    input,
-    stop,
-    isLoading,
-    handleInputChange,
-    handleSubmit,
-  } = useCompletion({
+  // const {
+  //   completion,
+  //   complete,
+  //   input,
+  //   stop,
+  //   isLoading,
+  //   handleInputChange,
+  //   handleSubmit,
+  // } = useCompletion({
+  //   api: "/api/completion",
+  //   body: {
+  //     url: url,
+  //     chatId: chatId,
+  //   },
+  //   onResponse: (res) => {
+  //     console.log("onResponse", res); // I think some error handling can happen here
+  //   },
+  // });
+
+  const { complete, answerText } = useCustomCompletion({
     api: "/api/completion",
     body: {
       url: url,
       chatId: chatId,
     },
+    onMessageEnd: (text: string) => {
+      console.log("onMessageEnd", text);
+    },
   });
-
-  console.log(completion);
 
   const { data: sessionData } = useSession();
 
@@ -98,6 +111,7 @@ const AuthShowcase = () => {
 
   return (
     <div className={styles.authContainer}>
+      <div style={{ color: "white" }}>{answerText}</div>
       <input
         value={url}
         onInput={(e) => {

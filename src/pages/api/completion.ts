@@ -325,10 +325,13 @@ export default async function handler(
 
           console.log(responseMessage);
         },
+        handleLLMError: (err) => {
+          console.log(err);
+        },
       },
     ]
   );
 
   // Streams to the client
-  return streamToResponse(stream, res);
+  streamToResponse(stream, res);
 }
