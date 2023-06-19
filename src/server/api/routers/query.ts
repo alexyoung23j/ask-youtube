@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+// DEPRECATED: This file is no longer used. It has been replaced by src/server/api/completion.ts
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -14,6 +16,7 @@ import {
   ConversationChain,
   LLMChain,
 } from "langchain/chains";
+import { CallbackManager } from "langchain/callbacks";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
@@ -35,6 +38,7 @@ import {
 import { StructuredOutputParser } from "langchain/output_parsers";
 import type { Document } from "langchain/dist/docstore";
 import type { ChatHistory } from "@prisma/client";
+import { StreamingTextResponse, LangChainStream, Message } from "ai";
 
 interface DocumentMetadata {
   paragraphIndex: number;
@@ -184,11 +188,6 @@ export const queryRouter = createTRPCRouter({
         },
       });
 
-      const model = new ChatOpenAI({
-        modelName: "gpt-4",
-        streaming: true,
-      });
-
       const userMessage = await ctx.prisma.message.create({
         data: {
           content: inputText,
@@ -260,16 +259,6 @@ export const queryRouter = createTRPCRouter({
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]);
 
-      const chain = new ConversationChain({
-        llm: model,
-        memory: new BufferMemory({
-          chatHistory: new ChatMessageHistory(pastMessages),
-          inputKey: "history",
-        }),
-        // verbose: true,
-        prompt: chatPrompt,
-      });
-
       const parser = StructuredOutputParser.fromZodSchema(
         z.object({
           answer: z.string().describe("answer to the user's question"),
@@ -283,47 +272,76 @@ export const queryRouter = createTRPCRouter({
 
       const formatInstructions = parser.getFormatInstructions();
 
-      const results = await chain.call(
+      const { stream, handlers } = LangChainStream({
+        onCompletion: async (response) => {
+          console.log("lol im her22e", response);
+          const parsedResponse = await parser.parse(response);
+          console.log("lol im here", parsedResponse);
+
+          const message = await ctx.prisma.message.create({
+            data: {
+              content: parsedResponse.answer,
+              sender: "AI",
+              videoTimestamps: [],
+              chatId: chatId,
+            },
+          });
+        },
+      });
+
+      const model = new ChatOpenAI({
+        modelName: "gpt-4",
+        streaming: true,
+        callbackManager: CallbackManager.fromHandlers(handlers),
+      });
+
+      const chain = new ConversationChain({
+        llm: model,
+        memory: new BufferMemory({
+          chatHistory: new ChatMessageHistory(pastMessages),
+          inputKey: "history",
+        }),
+        // verbose: true,
+        prompt: chatPrompt,
+      });
+
+      const results = chain.call(
         {
           history: pastMessages,
           input: inputText,
           format_instructions: formatInstructions,
           context: parsedDocumentMap.map((doc) => doc.paragraphText).join("\n"),
         },
-        [
-          {
-            handleLLMNewToken(token: string) {
-              // console.log(token);
-            },
-          },
-        ]
+        [handlers]
       );
 
-      const res = await parser.parse(results.response as string);
+      // const res = await parser.parse(results.response as string);
 
-      const videoTimestamps = res.usedDocumentNumbers.map((num: string) => {
-        try {
-          const document = parsedDocumentMap.find(
-            (doc) => doc.paragraphIndex === parseInt(num)
-          );
-          const startTime = document?.snippetStartTime;
-          return startTime;
-        } catch (e) {
-          console.log(e);
-          return;
-        }
-      });
+      // const videoTimestamps = res.usedDocumentNumbers.map((num: string) => {
+      //   try {
+      //     const document = parsedDocumentMap.find(
+      //       (doc) => doc.paragraphIndex === parseInt(num)
+      //     );
+      //     const startTime = document?.snippetStartTime;
+      //     return startTime;
+      //   } catch (e) {
+      //     console.log(e);
+      //     return;
+      //   }
+      // });
 
-      const responseMessage = await ctx.prisma.message.create({
-        data: {
-          content: res.answer,
-          sender: "AI",
-          videoTimestamps: videoTimestamps as number[],
-          chatId: chatId,
-        },
-      });
+      // const responseMessage = await ctx.prisma.message.create({
+      //   data: {
+      //     content: res.answer,
+      //     sender: "AI",
+      //     videoTimestamps: videoTimestamps as number[],
+      //     chatId: chatId,
+      //   },
+      // });
 
-      console.log(responseMessage);
+      // console.log(responseMessage);
+
+      return new StreamingTextResponse(stream);
 
       return {
         status: "complete",

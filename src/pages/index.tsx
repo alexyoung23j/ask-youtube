@@ -4,7 +4,9 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import { api } from "~/utils/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useChat, useCompletion } from "ai/react";
+import useCustomCompletion from "~/hooks/useCustomCompletion";
 
 const Home: NextPage = () => {
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -62,21 +64,54 @@ export default Home;
 const AuthShowcase = () => {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
+  const [chatId, setChatId] = useState("");
+  // const {
+  //   completion,
+  //   complete,
+  //   input,
+  //   stop,
+  //   isLoading,
+  //   handleInputChange,
+  //   handleSubmit,
+  // } = useCompletion({
+  //   api: "/api/completion",
+  //   body: {
+  //     url: url,
+  //     chatId: chatId,
+  //   },
+  //   onResponse: (res) => {
+  //     console.log("onResponse", res); // I think some error handling can happen here
+  //   },
+  // });
+
+  const { complete, answerText } = useCustomCompletion({
+    api: "/api/completion",
+    body: {
+      url: url,
+      chatId: chatId,
+    },
+    onMessageEnd: (text: string) => {
+      console.log("onMessageEnd", text);
+    },
+  });
 
   const { data: sessionData } = useSession();
-
-  // const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-  //   undefined, // no input
-  //   { enabled: sessionData?.user !== undefined }
-  // );
 
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
 
-  const askChatBot = api.query.sendMessage.useMutation();
+  const generateResponse = async () => {
+    try {
+      const res = await complete(text);
+      console.log("im doneee", res);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className={styles.authContainer}>
+      <div style={{ color: "white" }}>{answerText}</div>
       <input
         value={url}
         onInput={(e) => {
@@ -97,14 +132,7 @@ const AuthShowcase = () => {
           setText(e.currentTarget.value);
         }}
       ></input>
-      <button
-        onClick={() => {
-          const res = askChatBot.mutate({ url, inputText: text });
-          console.log(res);
-        }}
-      >
-        Ask
-      </button>
+      <button onClick={() => void generateResponse()}>Ask</button>
       {/* <p className={styles.showcaseText}>
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
         {secretMessage && <span> - {secretMessage}</span>}
