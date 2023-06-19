@@ -5,6 +5,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { api } from "~/utils/api";
 import { useState } from "react";
+import { useChat, useCompletion } from "ai/react";
 
 const Home: NextPage = () => {
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -62,6 +63,24 @@ export default Home;
 const AuthShowcase = () => {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
+  const [chatId, setChatId] = useState("");
+  const {
+    completion,
+    complete,
+    input,
+    stop,
+    isLoading,
+    handleInputChange,
+    handleSubmit,
+  } = useCompletion({
+    api: "/api/completion",
+    body: {
+      url: url,
+      chatId: chatId,
+    },
+  });
+
+  console.log(completion);
 
   const { data: sessionData } = useSession();
 
@@ -74,6 +93,14 @@ const AuthShowcase = () => {
     api.transcribe.startTranscriptionJob.useMutation();
 
   const askChatBot = api.query.sendMessage.useMutation();
+
+  const generateResponse = async () => {
+    try {
+      await complete(text);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className={styles.authContainer}>
@@ -97,14 +124,7 @@ const AuthShowcase = () => {
           setText(e.currentTarget.value);
         }}
       ></input>
-      <button
-        onClick={() => {
-          const res = askChatBot.mutate({ url, inputText: text });
-          console.log(res);
-        }}
-      >
-        Ask
-      </button>
+      <button onClick={() => void generateResponse()}>Ask</button>
       {/* <p className={styles.showcaseText}>
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
         {secretMessage && <span> - {secretMessage}</span>}
