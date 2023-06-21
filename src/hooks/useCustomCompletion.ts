@@ -23,35 +23,39 @@ const useCustomCompletion = ({
   } = useCompletion({ api, body, onResponse });
 
   const [answerText, setAnswerText] = useState("");
+  const [completedStream, setCompletedStream] = useState(false);
 
   useEffect(() => {
-    const newLineRegex = /\n\s*/g;
-    const parsedCompletion = completion.replace(newLineRegex, "");
-    const startInd = parsedCompletion.indexOf('{"answer": "');
-    const endInd =
-      parsedCompletion.indexOf('", "', startInd) !== -1
-        ? parsedCompletion.indexOf('", "', startInd)
-        : parsedCompletion.indexOf('","', startInd);
+    if (!completedStream) {
+      const newLineRegex = /\n\s*/g;
+      const parsedCompletion = completion.replace(newLineRegex, "");
+      const startInd = parsedCompletion.indexOf('{"answer": "');
+      const endInd =
+        parsedCompletion.indexOf('", "', startInd) !== -1
+          ? parsedCompletion.indexOf('", "', startInd)
+          : parsedCompletion.indexOf('","', startInd);
 
-    if (startInd !== -1 && parsedCompletion.length > startInd + 17) {
-      if (endInd) {
-        const answer = parsedCompletion.slice(startInd + 12, endInd);
-        setAnswerText(answer);
-      } else {
-        const answer = parsedCompletion.slice(
-          startInd + 9,
-          parsedCompletion.length - 5
-        );
-        setAnswerText(answer);
+      if (startInd !== -1 && parsedCompletion.length > startInd + 17) {
+        if (endInd) {
+          const answer = parsedCompletion.slice(startInd + 12, endInd);
+          setAnswerText(answer);
+        } else {
+          const answer = parsedCompletion.slice(
+            startInd + 9,
+            parsedCompletion.length - 5
+          );
+          setAnswerText(answer);
+        }
+      }
+
+      if (parsedCompletion.endsWith("}")) {
+        if (onMessageEnd) {
+          onMessageEnd(answerText);
+        }
+        setCompletedStream(true);
       }
     }
-
-    if (parsedCompletion.endsWith("}")) {
-      if (onMessageEnd) {
-        onMessageEnd(answerText);
-      }
-    }
-  }, [completion, onMessageEnd]);
+  }, [completion, onMessageEnd, completedStream]);
 
   return {
     complete,

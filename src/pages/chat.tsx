@@ -3,7 +3,8 @@
 import { GetServerSidePropsContext, type NextPage } from "next";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { set } from "zod";
 import useCustomCompletion from "~/hooks/useCustomCompletion";
 import { api } from "~/utils/api";
 import { redirectIfNotAuthed } from "~/utils/routing";
@@ -33,11 +34,19 @@ const ChatPage: NextPage = () => {
       chatId: id,
     },
     onMessageEnd: (text: string) => {
-      console.log("onMessageEnd", text);
-      refetchChatHistory();
-      setIsStreaming(false);
+      console.log("message ended");
+      setTimeout(async () => {
+        await refetchChatHistory();
+        setIsStreaming(false);
+      }, 500);
     },
   });
+
+  const createUserMessage = api.chat.createUserMessage.useMutation();
+
+  useEffect(() => {
+    console.log({ answerText });
+  }, [answerText]);
 
   if (!id) {
     // router.push("/chats");
@@ -50,14 +59,24 @@ const ChatPage: NextPage = () => {
 
   const generateResponse = async () => {
     try {
+      const userInputCopy = userInput;
+      setUserInput("");
+
+      await createUserMessage.mutateAsync({
+        chatHistoryId: id as string,
+        message: userInputCopy,
+      });
+      await refetchChatHistory();
       setIsStreaming(true);
-      const res = await complete(userInput);
-      console.log("im doneee", res);
+      complete(userInputCopy);
     } catch (e) {
       setIsStreaming(false);
       console.error(e);
     }
   };
+
+  const latestMessageText =
+    chatHistory?.messages[chatHistory?.messages.length - 2]?.content;
 
   return (
     <div>
@@ -66,20 +85,47 @@ const ChatPage: NextPage = () => {
         {chatHistory?.messages.map((message) => {
           return (
             <div
+              key={message.id}
               style={{
-                margin: "8px",
+                margin: "12px",
                 backgroundColor: message.sender === "AI" ? "lightblue" : "none",
               }}
-              key={message.id}
             >
-              {message.content}
+              <div
+                style={{
+                  margin: "8px",
+                }}
+              >
+                {message.content}
+              </div>
+              {message.videoTimestamps &&
+                message.videoTimestamps.length > 0 && (
+                  <div
+                    style={{ marginLeft: "40px", display: "flex", gap: "4px" }}
+                  >
+                    Timestamps:
+                    {message.videoTimestamps.map((timestamp) => {
+                      return (
+                        <div
+                          style={{
+                            minWidth: "40px",
+                            maxWidth: "fit-content",
+                          }}
+                          key={timestamp}
+                        >
+                          {timestamp}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
             </div>
           );
         })}
-        {isStreaming && (
+        {isStreaming && answerText !== latestMessageText && (
           <div
             style={{
-              margin: "8px",
+              margin: "12px",
               backgroundColor: "lightblue",
             }}
           >

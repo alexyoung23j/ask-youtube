@@ -112,6 +112,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
+  console.log("route start", new Date());
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const {
     prompt: inputText,
@@ -185,14 +186,7 @@ export default async function handler(
     },
   });
 
-  const userMessage = await prisma.message.create({
-    data: {
-      content: inputText as string,
-      sender: "USER",
-      videoTimestamps: [],
-      chatId: chatId,
-    },
-  });
+  console.log("route mid", new Date());
 
   const transcription = video?.transcription as Array<{
     sentences: Array<{ text: string }>;
@@ -217,13 +211,15 @@ export default async function handler(
   });
 
   // check if we have previous conversation history, if so, use it.
-  const pastMessages: BaseChatMessage[] = messages.map((message) => {
-    if (message.sender === "USER") {
-      return new HumanChatMessage(message.content);
-    } else {
-      return new AIChatMessage(message.content);
-    }
-  });
+  const pastMessages: BaseChatMessage[] = messages
+    .slice(-3, -1)
+    .map((message) => {
+      if (message.sender === "USER") {
+        return new HumanChatMessage(message.content);
+      } else {
+        return new AIChatMessage(message.content);
+      }
+    });
 
   // Use this previous history with the new question to formulate a standalone question
   const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. 
@@ -282,6 +278,8 @@ export default async function handler(
     prompt: chatPrompt,
   });
 
+  console.log("route start call", new Date());
+
   const results = chain.call(
     {
       history: pastMessages,
@@ -327,7 +325,7 @@ export default async function handler(
           console.log(responseMessage);
         },
         handleLLMError: (err) => {
-          console.log(err);
+          console.log("er here", err);
         },
       },
     ]

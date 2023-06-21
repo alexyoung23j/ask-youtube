@@ -91,4 +91,34 @@ export const chatRouter = createTRPCRouter({
 
       return chatHistory;
     }),
+  createUserMessage: protectedProcedure
+    .input(z.object({ chatHistoryId: z.string(), message: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { chatHistoryId, message } = input;
+
+      const chatHistory = await ctx.prisma.chatHistory.findFirst({
+        where: {
+          id: chatHistoryId,
+          userId: ctx.session.user?.id,
+        },
+      });
+
+      if (!chatHistory) {
+        throw new Error("No chat history not found");
+      }
+
+      const newMessage = await ctx.prisma.message.create({
+        data: {
+          chatId: chatHistoryId,
+          content: message,
+          sender: "USER",
+        },
+      });
+
+      if (!newMessage) {
+        throw new Error("Failed to create message");
+      }
+
+      return newMessage;
+    }),
 });
