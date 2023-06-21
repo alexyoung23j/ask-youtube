@@ -39,7 +39,7 @@ model ChatHistory {
 }
 
 model Message {
-  id              Int         @id @default(autoincrement())
+  id              String         @id @default(cuid())
   chatId          String
   chat            ChatHistory @relation(fields: [chatId], references: [id])
   sender          SenderType  @default(AI)

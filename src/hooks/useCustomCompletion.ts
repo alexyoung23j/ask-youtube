@@ -26,10 +26,10 @@ const useCustomCompletion = ({
   const [completedAnswerStream, setCompletedAnswerStream] = useState(false);
 
   useEffect(() => {
+    const newLineRegex = /\n\s*/g;
+    const parsedCompletion = completion.replace(newLineRegex, "");
     if (!completedAnswerStream && isLoading) {
-      const newLineRegex = /\n\s*/g;
-      const parsedCompletion = completion.replace(newLineRegex, "");
-      const startInd = parsedCompletion.indexOf('{"answer": "');
+      const startInd = parsedCompletion.indexOf('"answer": "');
       const endInd =
         parsedCompletion.indexOf('", "', startInd) !== -1
           ? parsedCompletion.indexOf('", "', startInd)
@@ -37,12 +37,12 @@ const useCustomCompletion = ({
 
       if (startInd !== -1 && parsedCompletion.length > startInd + 17) {
         if (endInd) {
-          const answer = parsedCompletion.slice(startInd + 12, endInd);
+          const answer = parsedCompletion.slice(startInd + 11, endInd);
           setAnswerText(answer);
         } else {
           const answer = parsedCompletion.slice(
-            startInd + 9,
-            parsedCompletion.length - 5
+            startInd + 8,
+            parsedCompletion.length - 6
           );
           setAnswerText(answer);
         }
@@ -50,7 +50,7 @@ const useCustomCompletion = ({
 
       if (parsedCompletion.endsWith("}")) {
         if (onMessageEnd) {
-          onMessageEnd(answerText);
+          onMessageEnd(parsedCompletion);
         }
         setCompletedAnswerStream(true);
       }
@@ -59,6 +59,7 @@ const useCustomCompletion = ({
 
   return {
     complete,
+    completion,
     answerText,
     isLoading,
     input,

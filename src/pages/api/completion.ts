@@ -85,7 +85,7 @@ const buildDocumentsForPrompt = ({
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
       // Concatenate selected sentences
-      let paragraphText = `DOCUMENT INDEX: ${paragraphIndex} DOCUMENT: `;
+      let paragraphText = `\nDOCUMENT TIMESTAMP: ${startTime} DOCUMENT: `;
       selectedSentences.forEach((sentence, idx) => {
         paragraphText += `${sentence.text} `;
       });
@@ -233,7 +233,6 @@ export default async function handler(
         
         In addition, use the following pieces of context, along with your general knowledge of the subject as an extremely intelligent,
         unbiased, and well informed person, to answer the users question if appropriate. 
-        If you don't know the answer, just say that the video doesn't provide a good answer, don't try to make up an answer.
         ----------------
         {context}
          
@@ -242,7 +241,7 @@ export default async function handler(
         is unrelated or unanswerable given the context or history, indicate that and then answer as a helpful, knowledgeable general assistant as best you can.
 
         {format_instructions}
-        Be talktaive and specific!
+        Be talkative, verbose, and specific! Offer more additional context than was asked for.
 
         Human Question: {input}
         AI Answer, formatted as specified: `;
@@ -255,10 +254,10 @@ export default async function handler(
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({
       answer: z.string().describe("answer to the user's question"),
-      usedDocumentNumbers: z
-        .array(z.string())
+      usedTimestamps: z
+        .array(z.number())
         .describe(
-          "the numbers of the documents actually used to answer the user's question. The numbers are provided in the context."
+          "the timestamps of the documents actually used to answer the user's question. The timestamps are provided in the context."
         ),
     })
   );
@@ -285,7 +284,7 @@ export default async function handler(
 
   console.log("route start call", new Date());
 
-  const results = chain
+  chain
     .call(
       {
         history: pastMessages,
@@ -295,41 +294,6 @@ export default async function handler(
       },
       [
         {
-          handleLLMEnd: async (res) => {
-            const generation = res.generations[0];
-
-            if (!generation) {
-              return;
-            }
-            const answer = generation[0]?.text;
-            const parsedAnswer = await parser.parse(answer as string);
-
-            const videoTimestamps = parsedAnswer.usedDocumentNumbers.map(
-              (num: string) => {
-                try {
-                  const document = parsedDocumentMap.find(
-                    (doc) => doc.paragraphIndex === parseInt(num)
-                  );
-                  const startTime = document?.snippetStartTime;
-                  return startTime;
-                } catch (e) {
-                  console.log(e);
-                  return;
-                }
-              }
-            );
-
-            const responseMessage = await prisma.message.create({
-              data: {
-                content: parsedAnswer.answer,
-                sender: "AI",
-                videoTimestamps: videoTimestamps as number[],
-                chatId: chatId,
-              },
-            });
-
-            console.log(responseMessage);
-          },
           handleLLMError: (err) => {
             console.log("er here", err);
           },
@@ -338,7 +302,7 @@ export default async function handler(
     )
     .catch(console.error)
     .finally(() => {
-      // Call handleStreamEnd when the chat or stream ends
+      // Call handleStreamEnd when the chat or stream ends (patch for broken functionality in vercel library)
       void handlers.handleChainEnd();
     });
 
