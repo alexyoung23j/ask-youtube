@@ -154,8 +154,15 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     });
 
     // Save to DB TODO: correct values
-    const query = `INSERT INTO "Video" (url, transcription, title, length, "createdAt", "updatedAt") 
-               VALUES ($1, $2, $3, $4, $5, $6)`;
+    const query = `
+                    INSERT INTO "Video" (url, transcription, title, length, "createdAt", "updatedAt") 
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    ON CONFLICT (url) DO UPDATE 
+                    SET transcription = $2,
+                        title = $3,
+                        length = $4,
+                        "updatedAt" = $6;
+                  `;
     const values = [
       videoUrl,
       JSON.stringify(paragraphs),

@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 import axios from "axios";
+import { parseYouTubeURL } from "~/utils/helpers";
+import { TRPCError } from "@trpc/server";
 
 export const transcriptionRouter = createTRPCRouter({
   startTranscriptionJob: publicProcedure
@@ -9,23 +11,48 @@ export const transcriptionRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { url } = input;
 
+      let parsedUrl;
+
+      try {
+        parsedUrl = parseYouTubeURL(url);
+      } catch (e) {
+        console.log(e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid url",
+        });
+      }
+
       const existingVideo = await ctx.prisma.video.findFirst({
         where: {
-          url: url,
+          url: parsedUrl,
         },
       });
 
       if (existingVideo) {
         // Handle differently
         console.log("video already exists in db");
-        return;
+        return existingVideo;
       }
 
+      const newVideo = await ctx.prisma.video.create({
+        data: {
+          url: parsedUrl,
+        },
+      });
+
       try {
-        void axios.post(process.env.CLOUD_FUNCTION_URL as string, { url: url });
+        void axios.post(process.env.CLOUD_FUNCTION_URL as string, {
+          url: parsedUrl,
+        });
         console.log("fired off transcription job", new Date());
+        return newVideo;
       } catch (e) {
         console.log(e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to make transcription request",
+        });
       }
     }),
 });

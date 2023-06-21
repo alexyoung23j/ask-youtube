@@ -161,6 +161,7 @@ export default async function handler(
       return res.status(500).end("Chat history id not found");
     }
   } else {
+    // TODO: this shouldnt ever be there right
     chatHistory = await prisma.chatHistory.create({
       data: {
         videoUrl: video.url,

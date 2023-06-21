@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Video" ALTER COLUMN "title" DROP NOT NULL,
+ALTER COLUMN "length" DROP NOT NULL,
+ALTER COLUMN "transcription" DROP NOT NULL;

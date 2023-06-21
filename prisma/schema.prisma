@@ -17,9 +17,9 @@ datasource db {
 
 model Video {
   url           String        @id
-  title         String
-  length        Int
-  transcription Json
+  title         String?
+  length        Int?
+  transcription Json?
   chatHistory   ChatHistory[]
 
   createdAt DateTime @default(now())
