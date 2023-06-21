@@ -1,18 +1,10 @@
 import { prisma } from "~/server/db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import {
-  RetrievalQAChain,
-  loadQARefineChain,
-  ConversationalRetrievalQAChain,
-  ConversationChain,
-  LLMChain,
-} from "langchain/chains";
+import { ConversationChain } from "langchain/chains";
 import { CallbackManager } from "langchain/callbacks";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { TRPCError } from "@trpc/server";
 import { getPineconeClient } from "~/server/db";
 import { BufferMemory, ChatMessageHistory } from "langchain/memory";
 import {
@@ -253,7 +245,11 @@ export default async function handler(
 
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({
-      answer: z.string().describe("answer to the user's question"),
+      answer: z
+        .string()
+        .describe(
+          "answer to the user's question. Do NOT mention timestamps here."
+        ),
       usedTimestamps: z
         .array(z.number())
         .describe(
