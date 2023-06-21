@@ -27,35 +27,32 @@ const ChatPage: NextPage = () => {
       chatHistoryId: id as string,
     });
 
-  const { complete, answerText } = useCustomCompletion({
+  const {
+    complete,
+    answerText,
+    isLoading,
+    setAnswerText,
+    setCompletedAnswerStream,
+  } = useCustomCompletion({
     api: "/api/completion",
     body: {
       url: chatHistory?.video.url,
       chatId: id,
     },
     onMessageEnd: (text: string) => {
-      console.log("message ended");
       setTimeout(async () => {
         await refetchChatHistory();
         setIsStreaming(false);
+        setAnswerText("");
+        setCompletedAnswerStream(false);
       }, 500);
+    },
+    onResponse: () => {
+      setIsStreaming(true);
     },
   });
 
   const createUserMessage = api.chat.createUserMessage.useMutation();
-
-  useEffect(() => {
-    console.log({ answerText });
-  }, [answerText]);
-
-  if (!id) {
-    // router.push("/chats");
-    return <div>Something went wrong.</div>;
-  }
-
-  if (!transcriptionCompleted) {
-    return <div>Transcribing...</div>;
-  }
 
   const generateResponse = async () => {
     try {
@@ -67,16 +64,21 @@ const ChatPage: NextPage = () => {
         message: userInputCopy,
       });
       await refetchChatHistory();
-      setIsStreaming(true);
-      complete(userInputCopy);
+      const res = await complete(userInputCopy);
     } catch (e) {
       setIsStreaming(false);
       console.error(e);
     }
   };
 
-  const latestMessageText =
-    chatHistory?.messages[chatHistory?.messages.length - 2]?.content;
+  if (!id) {
+    // router.push("/chats");
+    return <div>Something went wrong.</div>;
+  }
+
+  if (!transcriptionCompleted) {
+    return <div>Transcribing...</div>;
+  }
 
   return (
     <div>
@@ -122,7 +124,7 @@ const ChatPage: NextPage = () => {
             </div>
           );
         })}
-        {isStreaming && answerText !== latestMessageText && (
+        {isStreaming && (
           <div
             style={{
               margin: "12px",

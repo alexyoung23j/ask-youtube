@@ -193,8 +193,11 @@ export default async function handler(
   }>;
 
   // Load in documents
+  console.log("init pinecone", new Date());
   const pinecone = await getPineconeClient();
+  console.log("pinecone initted", new Date());
   const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
+  console.log("starting vector search, ", new Date());
   const vectorStore = await PineconeStore.fromExistingIndex(
     new OpenAIEmbeddings(),
     { pineconeIndex }
@@ -204,6 +207,7 @@ export default async function handler(
     (await vectorStore.similaritySearchWithScore(inputText as string, 3, {
       url: url as string,
     })) as Array<[Document<DocumentMetadata>, number]>;
+  console.log("finished similarity search", new Date());
 
   const parsedDocumentMap = buildDocumentsForPrompt({
     documents: relevantDocuments,
@@ -234,13 +238,14 @@ export default async function handler(
         {context}
          
         All inputs should be related to the documents or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
-        Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. 
+        Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. If the question 
+        is unrelated or unanswerable given the context or history, indicate that and then answer as a helpful, knowledgeable general assistant as best you can.
 
         {format_instructions}
         Be talktaive and specific!
 
         Human Question: {input}
-        AI Answer: `;
+        AI Answer, formatted as specified: `;
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(PROMPT),
@@ -280,56 +285,62 @@ export default async function handler(
 
   console.log("route start call", new Date());
 
-  const results = chain.call(
-    {
-      history: pastMessages,
-      input: inputText as string,
-      format_instructions: formatInstructions,
-      context: parsedDocumentMap.map((doc) => doc.paragraphText).join("\n"),
-    },
-    [
+  const results = chain
+    .call(
       {
-        handleLLMEnd: async (res) => {
-          const generation = res.generations[0];
-
-          if (!generation) {
-            return;
-          }
-          const answer = generation[0]?.text;
-          const parsedAnswer = await parser.parse(answer as string);
-
-          const videoTimestamps = parsedAnswer.usedDocumentNumbers.map(
-            (num: string) => {
-              try {
-                const document = parsedDocumentMap.find(
-                  (doc) => doc.paragraphIndex === parseInt(num)
-                );
-                const startTime = document?.snippetStartTime;
-                return startTime;
-              } catch (e) {
-                console.log(e);
-                return;
-              }
-            }
-          );
-
-          const responseMessage = await prisma.message.create({
-            data: {
-              content: parsedAnswer.answer,
-              sender: "AI",
-              videoTimestamps: videoTimestamps as number[],
-              chatId: chatId,
-            },
-          });
-
-          console.log(responseMessage);
-        },
-        handleLLMError: (err) => {
-          console.log("er here", err);
-        },
+        history: pastMessages,
+        input: inputText as string,
+        format_instructions: formatInstructions,
+        context: parsedDocumentMap.map((doc) => doc.paragraphText).join("\n"),
       },
-    ]
-  );
+      [
+        {
+          handleLLMEnd: async (res) => {
+            const generation = res.generations[0];
+
+            if (!generation) {
+              return;
+            }
+            const answer = generation[0]?.text;
+            const parsedAnswer = await parser.parse(answer as string);
+
+            const videoTimestamps = parsedAnswer.usedDocumentNumbers.map(
+              (num: string) => {
+                try {
+                  const document = parsedDocumentMap.find(
+                    (doc) => doc.paragraphIndex === parseInt(num)
+                  );
+                  const startTime = document?.snippetStartTime;
+                  return startTime;
+                } catch (e) {
+                  console.log(e);
+                  return;
+                }
+              }
+            );
+
+            const responseMessage = await prisma.message.create({
+              data: {
+                content: parsedAnswer.answer,
+                sender: "AI",
+                videoTimestamps: videoTimestamps as number[],
+                chatId: chatId,
+              },
+            });
+
+            console.log(responseMessage);
+          },
+          handleLLMError: (err) => {
+            console.log("er here", err);
+          },
+        },
+      ]
+    )
+    .catch(console.error)
+    .finally(() => {
+      // Call handleStreamEnd when the chat or stream ends
+      void handlers.handleChainEnd();
+    });
 
   // Streams to the client
   streamToResponse(stream, res);
