@@ -34,7 +34,7 @@ async function initClient() {
 
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY as string);
 
-const mimetype = "audio/wav";
+const mimetype = "audio/mp3";
 
 function deleteFile(filePath: string): void {
   fs.unlink(filePath, (err: any) => {
@@ -105,7 +105,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     const transcriptionResp: PrerecordedTranscriptionResponse =
       (await deepgram.transcription.preRecorded(source, {
         smart_format: true,
-        model: "base",
+        model: "nova",
         video: true,
         punctuate: true,
         times: true,
@@ -136,13 +136,13 @@ export const transcriptionJob = async (req: Request, res: Response) => {
         documents.push(
           new Document({
             metadata: {
-              start: sentence.start,
+              start: sentence?.start,
               url: videoUrl,
-              end: sentence.end,
+              end: sentence?.end,
               paragraphIndex: i,
               sentenceIndex: j,
             },
-            pageContent: sentence.text,
+            pageContent: sentence?.text as string,
           })
         );
       }
