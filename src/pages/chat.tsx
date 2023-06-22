@@ -3,18 +3,17 @@
 import { GetServerSidePropsContext, type NextPage } from "next";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { set } from "zod";
+import { useEffect, useRef, useState } from "react";
 import useCustomCompletion from "~/hooks/useCustomCompletion";
 import { api } from "~/utils/api";
 import { redirectIfNotAuthed } from "~/utils/routing";
+import { v4 as uuidv4 } from "uuid";
+import { removeOverlappingTimestamps } from "~/utils/helpers";
+import useYoutubeChat from "~/hooks/useYoutubeChat";
 
 const ChatPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
-  const [userInput, setUserInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-
   const { id } = router.query;
 
   const { data: transcriptionCompleted } =
@@ -22,54 +21,15 @@ const ChatPage: NextPage = () => {
       chatHistoryId: id as string,
     });
 
-  const { data: chatHistory, refetch: refetchChatHistory } =
-    api.chat.getChatHistory.useQuery({
-      chatHistoryId: id as string,
-    });
-
   const {
-    complete,
+    messages,
+    chatHistory,
+    userInput,
+    setUserInput,
+    generateResponse,
+    stopResponse,
     answerText,
-    isLoading,
-    setAnswerText,
-    setCompletedAnswerStream,
-  } = useCustomCompletion({
-    api: "/api/completion",
-    body: {
-      url: chatHistory?.video.url,
-      chatId: id,
-    },
-    onMessageEnd: (text: string) => {
-      setTimeout(async () => {
-        await refetchChatHistory();
-        setIsStreaming(false);
-        setAnswerText("");
-        setCompletedAnswerStream(false);
-      }, 500);
-    },
-    onResponse: () => {
-      setIsStreaming(true);
-    },
-  });
-
-  const createUserMessage = api.chat.createUserMessage.useMutation();
-
-  const generateResponse = async () => {
-    try {
-      const userInputCopy = userInput;
-      setUserInput("");
-
-      await createUserMessage.mutateAsync({
-        chatHistoryId: id as string,
-        message: userInputCopy,
-      });
-      await refetchChatHistory();
-      const res = await complete(userInputCopy);
-    } catch (e) {
-      setIsStreaming(false);
-      console.error(e);
-    }
-  };
+  } = useYoutubeChat({ id: id as string });
 
   if (!id) {
     // router.push("/chats");
@@ -84,7 +44,7 @@ const ChatPage: NextPage = () => {
     <div>
       {`chat with video: ${chatHistory?.video?.title as string}`}
       <div style={{ marginTop: "20px" }}>
-        {chatHistory?.messages.map((message) => {
+        {messages.map((message) => {
           return (
             <div
               key={message.id}
@@ -98,7 +58,7 @@ const ChatPage: NextPage = () => {
                   margin: "8px",
                 }}
               >
-                {message.content}
+                {message.isStreaming ? answerText : message.content}
               </div>
               {message.videoTimestamps &&
                 message.videoTimestamps.length > 0 && (
@@ -124,16 +84,22 @@ const ChatPage: NextPage = () => {
             </div>
           );
         })}
-        {isStreaming && (
+        {/* {isStreaming && (
           <div
             style={{
               margin: "12px",
               backgroundColor: "lightblue",
             }}
           >
-            {answerText}
+            <div
+              style={{
+                margin: "8px",
+              }}
+            >
+              {answerText}
+            </div>
           </div>
-        )}
+        )} */}
         <input
           value={userInput}
           onInput={(e) => {
@@ -141,6 +107,7 @@ const ChatPage: NextPage = () => {
           }}
         ></input>
         <button onClick={() => void generateResponse()}>Send</button>
+        <button onClick={() => void stopResponse()}>Stop</button>
       </div>
       <button
         onClick={sessionData ? () => void signOut() : () => void signIn()}
