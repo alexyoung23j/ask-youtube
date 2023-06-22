@@ -1,0 +1,79 @@
+@import "../shared";
+
+.YText {
+  color: $text-primary;
+  font-style: normal;
+  display: flex;
+  align-items: center;
+
+  &--large {
+    font-size: 48px;
+  }
+
+  &--h1 {
+    font-size: 26px;
+  }
+
+  &--h2 {
+    font-size: 22px;
+  }
+
+  &--h3 {
+    font-size: 15px;
+    font-weight: 500 !important;
+  }
+
+  &--h4 {
+    font-size: 14px;
+  }
+
+  &--h5 {
+    font-size: 12px;
+  }
+
+  &--h6 {
+    font-size: 10px;
+    font-weight: 100px;
+  }
+
+  &--h7 {
+    font-size: 8px;
+  }
+
+  &--bold {
+    font-weight: 700 !important;
+  }
+
+  &--regular {
+    font-weight: 500 !important;
+  }
+
+  &--medium {
+    font-weight: 500 !important;
+  }
+
+  &--italic {
+    font-style: italic;
+  }
+
+  &--underline {
+    text-decoration: underline;
+  }
+
+  &--block {
+    display: block;
+  }
+
+  &--inline {
+    display: inline;
+  }
+
+  &--isLink {
+    cursor: pointer !important;
+    color: blue !important;
+  }
+
+  &--white {
+    color: white;
+  }
+}

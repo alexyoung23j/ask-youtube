@@ -1,0 +1,16 @@
+@import "../shared";
+
+.YButton {
+  display: flex;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  background-color: $primary-red;
+  cursor: pointer;
+  width: fit-content;
+  padding: 10px 12px;
+
+  &:hover {
+    background-color: darken($primary-red, 10%);
+  }
+}

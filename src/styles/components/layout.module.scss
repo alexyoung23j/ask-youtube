@@ -1,0 +1,26 @@
+@import "/src/styles/shared";
+
+.MainBody {
+  width: 100%;
+  height: 100vh;
+  overflow: scroll !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: $primary-light;
+}
+
+.Children {
+  overflow: hidden;
+  flex: 1;
+}
+
+.TopBar {
+  background-color: $secondary-light;
+  height: 64px;
+  border-bottom: 1px solid $border-primary;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+}
