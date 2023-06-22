@@ -11,9 +11,8 @@ import { parseYouTubeURL } from "~/utils/helpers";
 import { redirectIfNotAuthed } from "~/utils/routing";
 import styles from "@/styles/pages/chats.module.scss";
 import YText from "~/components/YText";
-import HistoryContainer from "~/components/HistoryContainer";
 
-const ChatListPage: NextPage = () => {
+const VideosPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
@@ -72,35 +71,7 @@ const ChatListPage: NextPage = () => {
         </div>
       }
     >
-      <div className={styles.ChatListPage}>
-        <div className={styles.PageContent}>
-          <div className={styles.HeaderText}>
-            <YText>Chat sessions</YText>
-          </div>
-          <div className={styles.ContentList}>
-            {chatHistories?.map((chat) => {
-              return (
-                <div key={chat.id}>
-                  <HistoryContainer
-                    icon="chat"
-                    title={chat.video.title as string}
-                    onTitleClick={() => {
-                      router.push(`/chat?id=${chat.id}`);
-                    }}
-                    date={chat.updatedAt}
-                    length={chat.video.length as number}
-                    showEdit={true}
-                    showDelete={true}
-                    onDeleteClick={() => {
-                      console.log("deleting");
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <div className={styles.ChatListPage}></div>
     </PageLayout>
   );
 
@@ -149,4 +120,4 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
   });
 }
 
-export default ChatListPage;
+export default VideosPage;

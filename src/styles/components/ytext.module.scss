@@ -44,6 +44,10 @@
     font-weight: 700 !important;
   }
 
+  &--light {
+    font-weight: 300 !important;
+  }
+
   &--regular {
     font-weight: 500 !important;
   }
@@ -75,5 +79,13 @@
 
   &--white {
     color: white;
+  }
+
+  &--black {
+    color: $text-primary;
+  }
+
+  &--grey {
+    color: $text-grey;
   }
 }

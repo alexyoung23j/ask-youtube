@@ -3,8 +3,14 @@ import { Inter } from "@next/font/google";
 import { ComponentType } from "./helpers/types";
 import { getClassName } from "./helpers/utils";
 
-type FontWeight = "regular" | "medium" | "bold" | "italic" | "underline";
-export type FontColor = "white";
+type FontWeight =
+  | "light"
+  | "regular"
+  | "medium"
+  | "bold"
+  | "italic"
+  | "underline";
+export type FontColor = "white" | "black" | "grey";
 
 export type FontType =
   | "large"
@@ -46,7 +52,7 @@ const YText = ({
   children,
   fontType = "h1",
   fontWeight = "regular",
-  fontColor = "white",
+  fontColor = "black",
   className,
   notSelectable,
   align = "left-align",

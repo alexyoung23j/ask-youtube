@@ -17,9 +17,11 @@ const PageLayout = ({
   return (
     <div className={styles.MainBody}>
       <div className={styles.TopBar}>
-        {logo ? <div>logo </div> : logoReplacementContent}
-        {centerContent}
-        {rightContent}
+        <div className={styles.Content}>
+          {logo ? <div>placeholder</div> : logoReplacementContent}
+          {centerContent}
+          {rightContent}
+        </div>
       </div>
       <div className={styles.Children}>{children}</div>
     </div>

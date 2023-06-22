@@ -11,16 +11,24 @@
 }
 
 .Children {
-  overflow: hidden;
+  overflow: auto;
   flex: 1;
 }
 
 .TopBar {
   background-color: $secondary-light;
-  height: 64px;
+  height: 70px;
   border-bottom: 1px solid $border-primary;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px;
+  justify-content: center;
+
+  .Content {
+    max-width: 1080px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+  }
 }

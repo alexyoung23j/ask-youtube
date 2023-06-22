@@ -1,0 +1,16 @@
+@import "/src/styles/shared";
+
+.VideosPage {
+}
+
+.TopNavBar {
+  display: flex;
+  gap: 20px;
+  padding: 8px;
+  .Text {
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
