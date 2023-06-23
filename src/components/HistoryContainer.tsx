@@ -8,7 +8,7 @@ const HistoryContainer = ({
   title,
   onTitleClick,
   date,
-  length,
+  leftLabelOne,
   showEdit,
   showDelete,
   onEditClick,
@@ -18,7 +18,7 @@ const HistoryContainer = ({
   title: string;
   onTitleClick: () => void;
   date: Date;
-  length: number;
+  leftLabelOne: string;
   showEdit: boolean;
   showDelete: boolean;
   onEditClick?: () => void;
@@ -43,10 +43,9 @@ const HistoryContainer = ({
           fontWeight="light"
           className={styles.TextContainer}
         >
-          {Math.floor(length / 3600) > 0
-            ? `${Math.floor(length / 3600)}h `
-            : ""}
-          {Math.floor((length % 3600) / 60)}m
+          {leftLabelOne.length > 50
+            ? `${leftLabelOne.substring(0, 47)}...`
+            : leftLabelOne}
         </YText>
         <YText
           fontType="h3"

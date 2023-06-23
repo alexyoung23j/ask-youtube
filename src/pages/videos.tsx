@@ -11,6 +11,7 @@ import { parseYouTubeURL } from "~/utils/helpers";
 import { redirectIfNotAuthed } from "~/utils/routing";
 import styles from "@/styles/pages/chats.module.scss";
 import YText from "~/components/YText";
+import HistoryContainer from "~/components/HistoryContainer";
 
 const VideosPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -71,7 +72,42 @@ const VideosPage: NextPage = () => {
         </div>
       }
     >
-      <div className={styles.ChatListPage}></div>
+      <div className={styles.ChatListPage}>
+        <div className={styles.PageContent}>
+          <div className={styles.HeaderText}>
+            <YText>Transcribed Videos</YText>
+          </div>
+          <div className={styles.ContentList}>
+            {chatHistories?.map((chat) => {
+              if (!chat.messages[0]?.content || !chat.video.length) return null;
+
+              const length =
+                Math.floor(chat.video.length / 3600) > 0
+                  ? `${Math.floor(chat.video.length / 3600)}h `
+                  : "" + `${Math.floor((chat.video.length % 3600) / 60)}m`;
+
+              return (
+                <div key={chat.id}>
+                  <HistoryContainer
+                    icon="chat"
+                    title={chat.video.title as string}
+                    onTitleClick={() => {
+                      router.push(`/chat?id=${chat.id}`);
+                    }}
+                    date={chat.updatedAt}
+                    leftLabelOne={length}
+                    showEdit={true}
+                    showDelete={true}
+                    onDeleteClick={() => {
+                      console.log("deleting");
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </PageLayout>
   );
 

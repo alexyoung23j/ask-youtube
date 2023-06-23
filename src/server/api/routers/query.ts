@@ -31,6 +31,11 @@ export const chatRouter = createTRPCRouter({
       },
       include: {
         video: true,
+        messages: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

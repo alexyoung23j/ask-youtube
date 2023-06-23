@@ -79,17 +79,18 @@ const ChatListPage: NextPage = () => {
           </div>
           <div className={styles.ContentList}>
             {chatHistories?.map((chat) => {
+              if (!chat.messages[0]?.content) return null;
               return (
                 <div key={chat.id}>
                   <HistoryContainer
                     icon="chat"
-                    title={chat.video.title as string}
+                    title={chat.messages[0]?.content}
                     onTitleClick={() => {
                       router.push(`/chat?id=${chat.id}`);
                     }}
                     date={chat.updatedAt}
-                    length={chat.video.length as number}
-                    showEdit={true}
+                    leftLabelOne={chat.video.title as string}
+                    showEdit={false}
                     showDelete={true}
                     onDeleteClick={() => {
                       console.log("deleting");
