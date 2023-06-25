@@ -16,11 +16,13 @@ const YInput = ({
   setValue,
   className,
   showSearchIcon = true,
+  placeholder = "Search",
 }: {
   value: string;
   setValue: (value: string) => void;
   className?: string;
   showSearchIcon?: boolean;
+  placeholder?: string;
 }) => {
   return (
     <div className={getClassName(ComponentType.Input, styles, {}, className)}>
@@ -45,7 +47,7 @@ const YInput = ({
             setValue(e.target.value);
           }}
           className={styles.Input}
-          placeholder="Search"
+          placeholder={placeholder}
         ></input>
       </div>
     </div>

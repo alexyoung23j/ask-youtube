@@ -8,16 +8,23 @@ const YButton = ({
   label = "label",
   children,
   className,
+  buttonType = "primary",
   onClick,
 }: {
   label?: string;
   children?: ReactNode | undefined;
   className?: string;
+  buttonType?: "primary" | "secondary";
   onClick?: (e?: React.MouseEvent) => void;
 }) => {
   return (
     <div
-      className={getClassName(ComponentType.Button, styles, {}, className)}
+      className={getClassName(
+        ComponentType.Button,
+        styles,
+        { buttonType },
+        className
+      )}
       onClick={(e) => {
         if (onClick) onClick(e);
       }}
@@ -25,7 +32,11 @@ const YButton = ({
       {children ? (
         children
       ) : (
-        <YText fontType="h3" fontColor="white" className={styles.TextButton}>
+        <YText
+          fontType="h3"
+          fontColor={buttonType === "primary" ? "white" : "black"}
+          className={styles.TextButton}
+        >
           {label}
         </YText>
       )}

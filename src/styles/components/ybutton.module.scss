@@ -14,7 +14,18 @@
     white-space: nowrap;
   }
 
-  &:hover {
-    background-color: darken($primary-red, 10%);
+  &--primary {
+    background-color: $primary-red;
+    &:hover {
+      background-color: darken($primary-red, 10%);
+    }
+  }
+
+  &--secondary {
+    background-color: $tertiary-light;
+    border: 1px solid $border-primary;
+    &:hover {
+      background-color: darken($tertiary-light, 10%);
+    }
   }
 }

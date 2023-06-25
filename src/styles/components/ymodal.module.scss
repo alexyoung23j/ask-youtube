@@ -1,0 +1,23 @@
+@import "../shared";
+
+.YModal {
+  max-width: 500px;
+  width: 50vw;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+
+  .ErrorText {
+    color: $primary-red;
+  }
+
+  .BottomSection {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    .Buttons {
+      width: 100%;
+    }
+  }
+}

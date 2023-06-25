@@ -16,6 +16,7 @@ import HistoryContainer from "~/components/HistoryContainer";
 import YInput from "~/components/YInput";
 import YButton from "~/components/YButton";
 import Fuse from "fuse.js";
+import YModal from "~/components/YModal";
 
 const VideosPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -26,6 +27,7 @@ const VideosPage: NextPage = () => {
   const { data: chatHistories } = api.chat.getChatHistories.useQuery();
   const [url, setUrl] = useState("");
   const [searchString, setSearchString] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const createChat = async (videoUrl: string) => {
     try {
@@ -106,6 +108,23 @@ const VideosPage: NextPage = () => {
       }
     >
       <div className={styles.VideosPage}>
+        <YModal
+          isOpen={modalOpen}
+          onCancel={() => setModalOpen(false)}
+          title="Add Video"
+          subtitle="Enter a YouTube URL to add a video to your library."
+          content={
+            <YInput
+              value={url}
+              setValue={setUrl}
+              placeholder="youtube.com/..."
+              showSearchIcon={false}
+            />
+          }
+          errorText=""
+          successLabel="Add"
+          cancelLabel="Cancel"
+        />
         <div className={styles.PageContent}>
           <div className={styles.HeaderText}>
             <YText>Transcribed Videos</YText>
@@ -114,7 +133,12 @@ const VideosPage: NextPage = () => {
           <div className={styles.ContentList}>
             <div className={styles.SearchSection}>
               <YInput value={searchString} setValue={setSearchString} />
-              <YButton label="Upload" />
+              <YButton
+                label="Upload"
+                onClick={() => {
+                  setModalOpen(true);
+                }}
+              />
             </div>
             {searchFilteredVideos?.map((video) => {
               let length;
