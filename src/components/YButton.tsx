@@ -25,7 +25,7 @@ const YButton = ({
       {children ? (
         children
       ) : (
-        <YText fontType="h3" fontColor="white">
+        <YText fontType="h3" fontColor="white" className={styles.TextButton}>
           {label}
         </YText>
       )}

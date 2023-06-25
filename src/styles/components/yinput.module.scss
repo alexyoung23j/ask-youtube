@@ -1,0 +1,22 @@
+@import "/src/styles/shared";
+
+.YInput {
+  border-radius: 4px;
+  border: 1px solid $border-primary;
+  background-color: $primary-light;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  width: 100%;
+
+  .Input {
+    width: 100%;
+    border: none;
+    padding: 10px 12px 10px 10px;
+    font: inherit;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}

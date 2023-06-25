@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { url } from "inspector";
 import { GetServerSidePropsContext, type NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import PageLayout from "~/components/layouts";
 import { api } from "~/utils/api";
 import { parseYouTubeURL } from "~/utils/helpers";
@@ -12,6 +13,9 @@ import { redirectIfNotAuthed } from "~/utils/routing";
 import styles from "@/styles/pages/videos.module.scss";
 import YText from "~/components/YText";
 import HistoryContainer from "~/components/HistoryContainer";
+import YInput from "~/components/YInput";
+import YButton from "~/components/YButton";
+import Fuse from "fuse.js";
 
 const VideosPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -19,10 +23,9 @@ const VideosPage: NextPage = () => {
     api.transcribe.startTranscriptionJob.useMutation();
   const createChatHistory = api.chat.createChatHistory.useMutation();
   const router = useRouter();
-
   const { data: chatHistories } = api.chat.getChatHistories.useQuery();
-
   const [url, setUrl] = useState("");
+  const [searchString, setSearchString] = useState("");
 
   const createChat = async (videoUrl: string) => {
     try {
@@ -39,15 +42,34 @@ const VideosPage: NextPage = () => {
   };
 
   // extract all unique videos in the chatHistories
-  const videos = chatHistories
-    ?.map((chat) => chat.video)
-    .filter((video, index, self) => {
-      return (
-        self.findIndex((v) => {
-          return v.url === video.url;
-        }) === index
-      );
-    });
+  const videos =
+    chatHistories
+      ?.map((chat) => chat.video)
+      .filter((video, index, self) => {
+        return (
+          self.findIndex((v) => {
+            return v.url === video.url;
+          }) === index
+        );
+      }) ?? [];
+
+  const options = {
+    keys: ["url", "title"], // Define the keys to search
+    threshold: 0.2, // Adjust the threshold for fuzzy matching, lower values mean stricter matching
+    ignoreLocation: true,
+    shouldSort: false,
+  };
+
+  const fuse = new Fuse(videos, options);
+
+  const searchFilteredVideos = useMemo(() => {
+    if (searchString === "") {
+      return videos; // Return the entire data array when searchString is empty
+    } else {
+      const results = fuse.search(searchString);
+      return results.map((result) => result.item);
+    }
+  }, [searchString, videos]);
 
   return (
     <PageLayout
@@ -88,8 +110,13 @@ const VideosPage: NextPage = () => {
           <div className={styles.HeaderText}>
             <YText>Transcribed Videos</YText>
           </div>
+
           <div className={styles.ContentList}>
-            {videos?.map((video) => {
+            <div className={styles.SearchSection}>
+              <YInput value={searchString} setValue={setSearchString} />
+              <YButton label="Upload" />
+            </div>
+            {searchFilteredVideos?.map((video) => {
               let length;
               if (!video.length) {
                 length = "transcribing..";
