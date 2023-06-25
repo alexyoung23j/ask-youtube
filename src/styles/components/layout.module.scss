@@ -3,7 +3,7 @@
 .MainBody {
   width: 100%;
   height: 100vh;
-  overflow: scroll !important;
+  overflow: auto !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

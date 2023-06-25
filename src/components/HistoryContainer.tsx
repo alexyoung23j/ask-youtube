@@ -1,7 +1,7 @@
 import styles from "@/styles/components/history_container.module.scss";
 import YText from "./YText";
 import { formatDistanceToNow } from "date-fns";
-import { EditIcon, TrashIcon } from "./icons";
+import { EditIcon, LinkIcon, TrashIcon } from "./icons";
 
 const HistoryContainer = ({
   icon,
@@ -13,6 +13,7 @@ const HistoryContainer = ({
   showDelete,
   onEditClick,
   onDeleteClick,
+  onIconClick,
 }: {
   icon: string;
   title: string;
@@ -23,17 +24,32 @@ const HistoryContainer = ({
   showDelete: boolean;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
+  onIconClick?: () => void;
 }) => {
   return (
     <div className={styles.HistoryContainer}>
       <div className={styles.LeftContent}>
-        <div>i</div>
+        {icon === "link" ? (
+          <div
+            style={{
+              width: "16px",
+              height: "16px",
+              margin: "4px",
+              cursor: "pointer",
+            }}
+            onClick={onIconClick}
+          >
+            <LinkIcon />
+          </div>
+        ) : (
+          <div>hi</div>
+        )}
         <YText
           fontType="h3"
           className={styles.TextUnderline}
           onClick={onTitleClick}
         >
-          {title.length > 80 ? `${title.substring(0, 77)}...` : title}
+          {title && title.length > 80 ? `${title.substring(0, 77)}...` : title}
         </YText>
       </div>
       <div className={styles.RightContent}>

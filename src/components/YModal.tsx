@@ -63,9 +63,9 @@ const YModal = ({
       <YText fontType="h3" fontWeight="light">
         {subtitle}
       </YText>
-      {content && (
-        <div style={{ marginTop: "4px", marginBottom: "4px" }}>{content}</div>
-      )}
+      <div style={{ marginTop: "4px", marginBottom: "4px" }}>
+        {content && content}
+      </div>
       {errorText.length > 0 && (
         <YText className={styles.ErrorText} fontType="h4">
           {errorText}

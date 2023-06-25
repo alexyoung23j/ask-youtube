@@ -41,7 +41,7 @@ model ChatHistory {
 model Message {
   id              String         @id @default(cuid())
   chatId          String
-  chat            ChatHistory @relation(fields: [chatId], references: [id])
+  chat            ChatHistory @relation(fields: [chatId], references: [id], onDelete: Cascade) 
   sender          SenderType  @default(AI)
   content         String
   videoTimestamps Float[]    @default([])

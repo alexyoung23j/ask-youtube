@@ -5,7 +5,7 @@ import { url } from "inspector";
 import { GetServerSidePropsContext, type NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageLayout from "~/components/layouts";
 import { api } from "~/utils/api";
 import { parseYouTubeURL } from "~/utils/helpers";
@@ -23,21 +23,44 @@ const VideosPage: NextPage = () => {
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
   const createChatHistory = api.chat.createChatHistory.useMutation();
+  const deleteVideo = api.video.deleteVideo.useMutation();
   const router = useRouter();
-  const { data: chatHistories } = api.chat.getChatHistories.useQuery();
+  const { data: chatHistories, refetch } = api.chat.getChatHistories.useQuery();
   const [url, setUrl] = useState("");
+  const [deleteUrl, setDeleteUrl] = useState("");
+  const [uploadUrlError, setUploadUrlError] = useState("");
   const [searchString, setSearchString] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (url.length < 1) {
+      setUploadUrlError("");
+    }
+  }, [url]);
 
   const createChat = async (videoUrl: string) => {
     try {
       // Transcribe/fetch and create chat history
+      setUploadUrlError("");
       const parsedUrl = parseYouTubeURL(videoUrl);
       const video = await generateTranscription.mutateAsync({ url: parsedUrl });
       const chatHistory = await createChatHistory.mutateAsync({
         videoUrl: video.url,
       });
       router.push(`/chat?id=${chatHistory.id}`);
+    } catch (e) {
+      console.log(e);
+      setUploadUrlError("Invalid URL");
+    }
+  };
+
+  const deleteVideoAndChats = async (videoUrl: string) => {
+    try {
+      await deleteVideo.mutateAsync({ videoUrl: videoUrl });
+      await refetch();
+      setDeleteModalOpen(false);
+      setDeleteUrl("");
     } catch (e) {
       console.log(e);
     }
@@ -109,8 +132,8 @@ const VideosPage: NextPage = () => {
     >
       <div className={styles.VideosPage}>
         <YModal
-          isOpen={modalOpen}
-          onCancel={() => setModalOpen(false)}
+          isOpen={uploadModalOpen}
+          onCancel={() => setUploadModalOpen(false)}
           title="Add Video"
           subtitle="Enter a YouTube URL to add a video to your library."
           content={
@@ -121,8 +144,23 @@ const VideosPage: NextPage = () => {
               showSearchIcon={false}
             />
           }
-          errorText=""
+          onSuccess={() => {
+            createChat(url);
+          }}
+          errorText={uploadUrlError}
           successLabel="Add"
+          cancelLabel="Cancel"
+        />
+        <YModal
+          isOpen={deleteModalOpen}
+          onCancel={() => setDeleteModalOpen(false)}
+          title="Delete Video"
+          subtitle="This will remove all your chat history for this video."
+          onSuccess={() => {
+            deleteVideoAndChats(deleteUrl);
+          }}
+          // errorText={uploadUrlError}
+          successLabel="Delete"
           cancelLabel="Cancel"
         />
         <div className={styles.PageContent}>
@@ -136,7 +174,7 @@ const VideosPage: NextPage = () => {
               <YButton
                 label="Upload"
                 onClick={() => {
-                  setModalOpen(true);
+                  setUploadModalOpen(true);
                 }}
               />
             </div>
@@ -147,14 +185,14 @@ const VideosPage: NextPage = () => {
               } else {
                 length =
                   Math.floor(video.length / 3600) > 0
-                    ? `${Math.floor(video.length / 3600)} h `
-                    : "" + `${Math.floor((video.length % 3600) / 60)} m`;
+                    ? `${Math.floor(video.length / 3600)}h `
+                    : "" + `${Math.floor((video.length % 3600) / 60)}m`;
               }
 
               return (
                 <div key={video.url}>
                   <HistoryContainer
-                    icon="chat"
+                    icon="link"
                     title={video.title as string}
                     onTitleClick={() => {
                       // Create the new chat history
@@ -162,10 +200,14 @@ const VideosPage: NextPage = () => {
                     }}
                     date={video.createdAt}
                     leftLabelOne={length}
-                    showEdit={true}
+                    showEdit={false}
                     showDelete={true}
                     onDeleteClick={() => {
-                      console.log("deleting");
+                      setDeleteModalOpen(true);
+                      setDeleteUrl(video.url);
+                    }}
+                    onIconClick={() => {
+                      window.open(video.url, "_blank");
                     }}
                   />
                 </div>
