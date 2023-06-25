@@ -1,7 +1,7 @@
 import styles from "@/styles/components/history_container.module.scss";
 import YText from "./YText";
 import { formatDistanceToNow } from "date-fns";
-import { EditIcon, LinkIcon, TrashIcon } from "./icons";
+import { ChatIcon, EditIcon, LinkIcon, TrashIcon } from "./icons";
 
 const HistoryContainer = ({
   icon,
@@ -29,21 +29,18 @@ const HistoryContainer = ({
   return (
     <div className={styles.HistoryContainer}>
       <div className={styles.LeftContent}>
-        {icon === "link" ? (
-          <div
-            style={{
-              width: "16px",
-              height: "16px",
-              margin: "4px",
-              cursor: "pointer",
-            }}
-            onClick={onIconClick}
-          >
-            <LinkIcon />
-          </div>
-        ) : (
-          <div>hi</div>
-        )}
+        <div
+          style={{
+            width: "16px",
+            height: "16px",
+            margin: "4px",
+            cursor: "pointer",
+          }}
+          onClick={onIconClick}
+        >
+          {icon === "link" ? <LinkIcon /> : <ChatIcon />}
+        </div>
+
         <YText
           fontType="h3"
           className={styles.TextUnderline}

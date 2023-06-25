@@ -32,6 +32,7 @@ const VideosPage: NextPage = () => {
   const [searchString, setSearchString] = useState("");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (url.length < 1) {
@@ -57,8 +58,10 @@ const VideosPage: NextPage = () => {
 
   const deleteVideoAndChats = async (videoUrl: string) => {
     try {
+      setIsDeleting(true);
       await deleteVideo.mutateAsync({ videoUrl: videoUrl });
       await refetch();
+      setIsDeleting(false);
       setDeleteModalOpen(false);
       setDeleteUrl("");
     } catch (e) {
@@ -162,6 +165,7 @@ const VideosPage: NextPage = () => {
           // errorText={uploadUrlError}
           successLabel="Delete"
           cancelLabel="Cancel"
+          loading={isDeleting}
         />
         <div className={styles.PageContent}>
           <div className={styles.HeaderText}>

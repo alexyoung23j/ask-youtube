@@ -6,6 +6,7 @@ import { ComponentType } from "./helpers/types";
 import styles from "@/styles/components/ymodal.module.scss";
 import YText from "./YText";
 import YButton from "./YButton";
+import YSpinner from "./YSpinner";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 Modal.setAppElement("body");
@@ -38,6 +39,7 @@ const YModal = ({
   onSuccess,
   onCancel,
   className,
+  loading,
 }: {
   isOpen: boolean;
   title?: string;
@@ -49,6 +51,7 @@ const YModal = ({
   onSuccess?: () => void;
   onCancel?: () => void;
   className?: string;
+  loading?: boolean;
 }) => (
   <Modal
     isOpen={isOpen}
@@ -73,10 +76,12 @@ const YModal = ({
       )}
       <div className={styles.BottomSection}>
         <YButton
-          label={successLabel}
+          label={!loading ? successLabel : ""}
           onClick={onSuccess}
           className={styles.Buttons}
-        />
+        >
+          {loading && <YSpinner size="small" />}
+        </YButton>
         <YButton
           label={cancelLabel}
           onClick={onCancel}
