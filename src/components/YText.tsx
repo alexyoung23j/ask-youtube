@@ -39,6 +39,7 @@ type GTextProps = {
   onClick?: (e?: React.MouseEvent) => void;
   attrs?: any;
   href?: string;
+  wrap?: string;
 };
 
 const inter = Inter({
@@ -55,6 +56,7 @@ const YText = ({
   fontColor = "black",
   className,
   notSelectable,
+  wrap = "none",
   align = "left-align",
   display = "flex",
   onClick,
@@ -73,6 +75,7 @@ const YText = ({
             align,
             fontColor,
             display,
+            wrap,
           },
           className
         )}

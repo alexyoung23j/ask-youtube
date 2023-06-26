@@ -1,6 +1,6 @@
 import { createTRPCRouter } from "~/server/api/trpc";
 import { transcriptionRouter } from "./routers/transcribe";
-import { chatRouter } from "./routers/query";
+import { chatRouter } from "./routers/chat";
 import { videoRouter } from "./routers/video";
 
 /**

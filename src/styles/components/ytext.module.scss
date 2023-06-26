@@ -88,4 +88,8 @@
   &--grey {
     color: $text-grey;
   }
+
+  &--nowrap {
+    white-space: nowrap;
+  }
 }

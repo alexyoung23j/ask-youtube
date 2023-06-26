@@ -22,8 +22,8 @@ const ChatListPage: NextPage = () => {
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
   const createChatHistory = api.chat.createChatHistory.useMutation();
-  const deleteChatHistory = api.video.deleteChat.useMutation();
-  const deleteAllChatHistory = api.video.deleteAllUserChats.useMutation();
+  const deleteChatHistory = api.chat.deleteChat.useMutation();
+  const deleteAllChatHistory = api.chat.deleteAllUserChats.useMutation();
 
   const router = useRouter();
   const { data: chatHistories, refetch } = api.chat.getChatHistories.useQuery();

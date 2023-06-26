@@ -17,6 +17,7 @@ import YInput from "~/components/YInput";
 import YButton from "~/components/YButton";
 import Fuse from "fuse.js";
 import YModal from "~/components/YModal";
+import { UploadIcon } from "~/components/icons";
 
 const VideosPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -25,7 +26,7 @@ const VideosPage: NextPage = () => {
   const createChatHistory = api.chat.createChatHistory.useMutation();
   const deleteVideo = api.video.deleteVideo.useMutation();
   const router = useRouter();
-  const { data: chatHistories, refetch } = api.chat.getChatHistories.useQuery();
+  const { data: videos, refetch } = api.video.getUserVideos.useQuery();
   const [url, setUrl] = useState("");
   const [deleteUrl, setDeleteUrl] = useState("");
   const [uploadUrlError, setUploadUrlError] = useState("");
@@ -70,16 +71,6 @@ const VideosPage: NextPage = () => {
   };
 
   // extract all unique videos in the chatHistories
-  const videos =
-    chatHistories
-      ?.map((chat) => chat.video)
-      .filter((video, index, self) => {
-        return (
-          self.findIndex((v) => {
-            return v.url === video.url;
-          }) === index
-        );
-      }) ?? [];
 
   const options = {
     keys: ["url", "title"], // Define the keys to search
@@ -88,7 +79,7 @@ const VideosPage: NextPage = () => {
     shouldSort: false,
   };
 
-  const fuse = new Fuse(videos, options);
+  const fuse = new Fuse(videos ?? [], options);
 
   const searchFilteredVideos = useMemo(() => {
     if (searchString === "") {
@@ -180,7 +171,22 @@ const VideosPage: NextPage = () => {
                 onClick={() => {
                   setUploadModalOpen(true);
                 }}
-              />
+              >
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      margin: "4px",
+                    }}
+                  >
+                    <UploadIcon />
+                  </div>
+                  <YText fontColor="white" fontType="h3" wrap="nowrap">
+                    Add New
+                  </YText>
+                </div>
+              </YButton>
             </div>
             {searchFilteredVideos?.map((video) => {
               let length;
@@ -221,41 +227,6 @@ const VideosPage: NextPage = () => {
         </div>
       </div>
     </PageLayout>
-  );
-
-  return (
-    <div>
-      Chats!
-      <div>
-        <input
-          value={url}
-          onInput={(e) => {
-            setUrl(e.currentTarget.value);
-          }}
-          placeholder="Enter URL"
-        ></input>
-      </div>
-      <div style={{ marginTop: "20px" }}>
-        {chatHistories?.map((chat) => {
-          return (
-            <div
-              key={chat.id}
-              onClick={() => {
-                router.push(`/chat?id=${chat.id}`);
-              }}
-              style={{ cursor: "pointer", margin: "4px" }}
-            >
-              {chat.video.title}
-            </div>
-          );
-        })}
-      </div>
-      <button
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
   );
 };
 

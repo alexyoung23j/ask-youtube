@@ -31,7 +31,23 @@ export const transcriptionRouter = createTRPCRouter({
 
       if (existingVideo) {
         // Handle differently
-        console.log("video already exists in db");
+        const existingUserVideoConnection =
+          await ctx.prisma.userConnectedVideos.findFirst({
+            where: {
+              userId: ctx.session?.user?.id,
+              videoUrl: existingVideo.url,
+            },
+          });
+
+        if (!existingUserVideoConnection) {
+          // Create connection
+          await ctx.prisma.userConnectedVideos.create({
+            data: {
+              userId: ctx.session?.user?.id as string,
+              videoUrl: existingVideo.url,
+            },
+          });
+        }
         return existingVideo;
       }
 
@@ -42,6 +58,13 @@ export const transcriptionRouter = createTRPCRouter({
       });
 
       try {
+        // Create connection
+        await ctx.prisma.userConnectedVideos.create({
+          data: {
+            userId: ctx.session?.user?.id as string,
+            videoUrl: newVideo.url,
+          },
+        });
         void axios.post(process.env.CLOUD_FUNCTION_URL as string, {
           url: parsedUrl,
         });

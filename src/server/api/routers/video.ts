@@ -29,6 +29,12 @@ export const videoRouter = createTRPCRouter({
       }
 
       try {
+        await ctx.prisma.userConnectedVideos.deleteMany({
+          where: {
+            videoUrl: videoUrl,
+            userId: ctx.session.user?.id,
+          },
+        });
         // Find all chat histories for this video and user
         await ctx.prisma.chatHistory.deleteMany({
           where: {
@@ -46,58 +52,18 @@ export const videoRouter = createTRPCRouter({
 
       return true;
     }),
-  deleteChat: protectedProcedure
-    .input(z.object({ chatHistoryId: z.string() }))
-    .mutation(async ({ input, ctx }) => {
-      const { chatHistoryId } = input;
+  getUserVideos: protectedProcedure.query(async ({ ctx }) => {
+    const connectedVideos = await ctx.prisma.userConnectedVideos.findMany({
+      where: {
+        userId: ctx.session.user?.id,
+      },
+      include: {
+        video: true,
+      },
+    });
 
-      const chatHistory = await ctx.prisma.chatHistory.findFirst({
-        where: {
-          id: chatHistoryId,
-          userId: ctx.session.user?.id,
-        },
-      });
-
-      if (!chatHistory) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No Chat History",
-        });
-      }
-
-      try {
-        // Find all chat histories for this video and user
-        await ctx.prisma.chatHistory.delete({
-          where: {
-            id: chatHistoryId,
-          },
-        });
-      } catch (e) {
-        console.log(e);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Unable to delete chat history",
-        });
-      }
-
-      return true;
-    }),
-  deleteAllUserChats: protectedProcedure.mutation(async ({ ctx }) => {
-    try {
-      // Find all chat histories for this video and user
-      await ctx.prisma.chatHistory.deleteMany({
-        where: {
-          userId: ctx.session.user?.id,
-        },
-      });
-    } catch (e) {
-      console.log(e);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Unable to delete chat histories",
-      });
-    }
-
-    return true;
+    return connectedVideos.map((connectedVideo) => {
+      return connectedVideo.video;
+    });
   }),
 });
