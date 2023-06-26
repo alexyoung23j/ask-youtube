@@ -32,3 +32,18 @@ export function removeOverlappingTimestamps(
 
   return nonOverlappingTimestamps;
 }
+
+export function extractVideoId(url: string): string | null {
+  const match = url.match(
+    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([^#\&\?]*).*/
+  );
+  return match ? (match[1] as string) : null;
+}
+
+export function secondsToTimestamp(secondsInput: number): string {
+  const seconds = Math.floor(secondsInput);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+}

@@ -1,0 +1,86 @@
+@import "/src/styles/shared";
+
+.ChatPage {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+
+  .VideoSection {
+    display: flex;
+    flex: 1;
+    width: 50%;
+    border-right: 1px solid $border-primary;
+    background-color: $tertiary-light;
+  }
+
+  .ChatSection {
+    width: 50%;
+    justify-content: flex-end;
+    display: flex;
+    flex-direction: column;
+
+    .Messages {
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .ChatBottom {
+      height: 88px;
+      background-color: $secondary-light;
+      padding: 20px;
+      width: 100%;
+      position: sticky;
+      bottom: 0;
+    }
+  }
+}
+
+.TopNavBar {
+  display: flex;
+  gap: 20px;
+  padding: 8px;
+  .Text {
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.ChatMessage {
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  max-width: 800px;
+  width: 100%;
+  justify-content: flex-start;
+
+  .MessageText {
+    font-weight: 400 !important;
+    line-height: 1.6;
+    font-size: 16px;
+    width: 100%;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .TimestampContainer {
+    display: flex;
+    gap: 16px;
+
+    .Timestamp {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      border: 1px solid $border-primary;
+      padding: 2px 8px;
+      border-radius: 4px;
+      gap: 6px;
+      background-color: $secondary-light;
+
+      &:hover {
+        background-color: darken($secondary-light, 5%);
+      }
+    }
+  }
+}

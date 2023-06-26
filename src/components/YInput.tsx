@@ -15,14 +15,18 @@ const YInput = ({
   value,
   setValue,
   className,
+  onEnterClick,
   showSearchIcon = true,
   placeholder = "Search",
+  rightContent,
 }: {
   value: string;
   setValue: (value: string) => void;
+  onEnterClick?: () => void;
   className?: string;
   showSearchIcon?: boolean;
   placeholder?: string;
+  rightContent?: React.ReactNode;
 }) => {
   return (
     <div className={getClassName(ComponentType.Input, styles, {}, className)}>
@@ -48,8 +52,14 @@ const YInput = ({
           }}
           className={styles.Input}
           placeholder={placeholder}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && onEnterClick) {
+              onEnterClick();
+            }
+          }}
         ></input>
       </div>
+      {rightContent && rightContent}
     </div>
   );
 };

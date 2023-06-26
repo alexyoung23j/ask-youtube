@@ -68,10 +68,14 @@ export const chatRouter = createTRPCRouter({
       });
 
       if (!video) {
-        return false;
+        return { status: false, video: null };
       }
 
-      return video.transcription !== undefined && video.transcription !== null;
+      return {
+        status:
+          video.transcription !== undefined && video.transcription !== null,
+        video: video,
+      };
     }),
   getChatHistory: protectedProcedure
     .input(z.object({ chatHistoryId: z.string() }))
