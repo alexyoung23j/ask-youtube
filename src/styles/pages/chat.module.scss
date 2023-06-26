@@ -7,7 +7,7 @@
 
   .VideoSection {
     display: flex;
-    flex: 1;
+    flex-direction: column;
     width: 50%;
     border-right: 1px solid $border-primary;
     background-color: $tertiary-light;
@@ -82,5 +82,16 @@
         background-color: darken($secondary-light, 5%);
       }
     }
+  }
+}
+
+.TranscriptSection {
+  // display: flex;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+
+  .Highlighted {
+    text-decoration: underline;
   }
 }

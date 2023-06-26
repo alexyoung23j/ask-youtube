@@ -20,10 +20,11 @@ import {
   UserAvatar,
   YoutubeIcon,
 } from "~/components/icons";
-import { useEffect, useRef, useState } from "react";
+import { createRef, useEffect, useRef, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { extractVideoId, secondsToTimestamp } from "~/utils/helpers";
 import { time } from "console";
+import { set } from "date-fns";
 
 // const Timestamp = ({
 //   timestamp,
@@ -148,11 +149,113 @@ const ChatMessage = ({
   );
 };
 
+const YoutubePlayer = ({
+  timestamp,
+  videoId,
+  playerRef,
+  onReady,
+}: {
+  timestamp: number;
+  videoId: string;
+  playerRef: React.MutableRefObject<any>;
+  onReady: YouTubeProps["onReady"];
+}) => {
+  useEffect(() => {
+    if (
+      playerRef &&
+      playerRef.current &&
+      typeof playerRef.current.seekTo === "function" &&
+      timestamp !== 0
+    ) {
+      playerRef.current.seekTo(timestamp, true);
+    }
+  }, [timestamp]);
+
+  const opts = {
+    height: "390",
+    width: "640",
+    playerVars: {
+      // https://developers.google.com/youtube/player_parameters
+      autoplay: 1 as 0 | 1 | undefined,
+      rel: 0 as 0 | 1 | undefined,
+      showinfo: 0 as 0 | 1 | undefined,
+      modestbranding: 1 as 1 | undefined,
+    },
+  };
+
+  return <YouTube videoId={videoId} opts={opts} onReady={onReady} />;
+};
+
+interface TextChunk {
+  start: number;
+  end: number;
+  text: string;
+}
+
+interface ChunkGroup {
+  start: number;
+  end: number;
+  num_words: number;
+  sentences: Array<TextChunk>;
+}
+
+const TranscriptViewer = ({
+  transcript,
+  timestamp,
+}: {
+  transcript: Array<ChunkGroup>;
+  timestamp: number;
+}) => {
+  const allSentences = transcript.flatMap((t) => t.sentences);
+  const refs = useRef(allSentences.map(() => createRef<HTMLSpanElement>()));
+  const [highlightedIndices, setHighlightedIndices] = useState<number[]>([]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let idx = allSentences.findIndex(
+      (s) => timestamp >= s.start && timestamp <= s.end
+    );
+    if (idx === -1) {
+      idx = allSentences.findIndex((s) => timestamp < s.start);
+      if (idx !== -1) idx -= 1;
+    }
+
+    if (idx !== -1) {
+      const node = refs.current[idx]?.current;
+      const container = containerRef.current;
+      if (node && container) {
+        container.scrollTop = node.offsetTop - container.offsetTop;
+      }
+      setHighlightedIndices(
+        [idx, idx + 1, idx + 2].filter((i) => i < allSentences.length)
+      );
+    }
+  }, [timestamp, allSentences]);
+
+  return (
+    <div ref={containerRef} className={styles.TranscriptSection}>
+      {allSentences.map((s, i) => (
+        <span
+          key={i}
+          ref={refs.current[i]}
+          className={highlightedIndices.includes(i) ? styles.Highlighted : ""}
+        >
+          {s.text}
+          {/* {(i < allSentences.length - 1 && allSentences[i + 1].start > s.end) ? <br /> : ' '} */}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const ChatPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const { id } = router.query;
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<any>(null);
+  const [playerTimestamp, setPlayerTimestamp] = useState(0);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -189,6 +292,30 @@ const ChatPage: NextPage = () => {
 
   const videoId = extractVideoId(transcriptionCompleted.video.url);
 
+  const onReady = (event: { target: any }) => {
+    playerRef.current = event.target;
+  };
+
+  const startVideo = () => {
+    if (
+      playerRef &&
+      playerRef.current &&
+      typeof playerRef.current.playVideo === "function"
+    ) {
+      playerRef.current.playVideo();
+    }
+  };
+
+  const stopVideo = () => {
+    if (
+      playerRef &&
+      playerRef.current &&
+      typeof playerRef.current.pauseVideo === "function"
+    ) {
+      playerRef.current.pauseVideo();
+    }
+  };
+
   return (
     <PageLayout
       rightContent={
@@ -224,7 +351,21 @@ const ChatPage: NextPage = () => {
       }
     >
       <div className={styles.ChatPage}>
-        <div className={styles.VideoSection}></div>
+        <div className={styles.VideoSection}>
+          <YoutubePlayer
+            onReady={onReady}
+            timestamp={playerTimestamp}
+            playerRef={playerRef}
+            videoId={videoId as string}
+          />
+          <TranscriptViewer
+            transcript={
+              transcriptionCompleted.video
+                .transcription as unknown as Array<ChunkGroup>
+            }
+            timestamp={playerTimestamp}
+          />
+        </div>
         <div className={styles.ChatSection}>
           <div className={styles.Messages}>
             {messages.map((message) => {
@@ -245,7 +386,8 @@ const ChatPage: NextPage = () => {
                     }
                     videoId={videoId as string}
                     onTimestampClick={(timestamp) => {
-                      //
+                      setPlayerTimestamp(timestamp);
+                      startVideo();
                     }}
                   />
                 </div>
