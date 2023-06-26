@@ -7,17 +7,22 @@ const PageLayout = ({
   centerContent,
   rightContent,
   children,
+  limitWidth = true,
 }: {
   logo?: boolean;
   logoReplacementContent?: JSX.Element;
   centerContent?: JSX.Element;
   rightContent?: JSX.Element;
   children?: ReactNode | undefined;
+  limitWidth?: boolean;
 }) => {
   return (
     <div className={styles.MainBody}>
       <div className={styles.TopBar}>
-        <div className={styles.Content}>
+        <div
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          className={`${styles.Content} ${limitWidth ? styles.LimitWidth : ""}`}
+        >
           {logo ? <div>placeholder</div> : logoReplacementContent}
           {centerContent}
           {rightContent}

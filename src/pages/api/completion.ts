@@ -77,7 +77,7 @@ const buildDocumentsForPrompt = ({
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
       // Concatenate selected sentences
-      let paragraphText = `\nDOCUMENT TIMESTAMP: ${startTime} DOCUMENT: `;
+      let paragraphText = `\TRANSCRIPT TIMESTAMP: ${startTime} DOCUMENT: `;
       selectedSentences.forEach((sentence, idx) => {
         paragraphText += `${sentence.text} `;
       });
@@ -223,12 +223,12 @@ export default async function handler(
         Current conversation:
         {history}
         
-        In addition, use the following pieces of context, along with your general knowledge of the subject as an extremely intelligent,
+        In addition, use the following pieces of context from the video, along with your general knowledge of the subject as an extremely intelligent,
         unbiased, and well informed person, to answer the users question if appropriate. 
         ----------------
         {context}
          
-        All inputs should be related to the documents or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
+        All inputs should be related to the transcripts or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
         Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. If the question 
         is unrelated or unanswerable given the context or history, indicate that and then answer as a helpful, knowledgeable general assistant as best you can.
 
@@ -253,7 +253,7 @@ export default async function handler(
       usedTimestamps: z
         .array(z.number())
         .describe(
-          "the timestamps of the documents actually used to answer the user's question. The timestamps are provided in the context."
+          "the timestamps of the transcripts actually used to answer the user's question. The timestamps are provided in the context."
         ),
     })
   );

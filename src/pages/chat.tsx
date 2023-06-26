@@ -16,7 +16,9 @@ import styles from "@/styles/pages/chat.module.scss";
 import YInput from "~/components/YInput";
 import {
   AIAvatar,
+  LinkIcon,
   SendIcon,
+  StopIcon,
   UserAvatar,
   YoutubeIcon,
 } from "~/components/icons";
@@ -25,6 +27,7 @@ import YouTube, { YouTubeProps } from "react-youtube";
 import { extractVideoId, secondsToTimestamp } from "~/utils/helpers";
 import { Inter } from "@next/font/google";
 import { useMediaQuery } from "react-responsive";
+import YLoading from "~/components/YLoading";
 
 const inter = Inter({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -64,12 +67,14 @@ const ChatMessage = ({
   timestamps,
   videoId,
   onTimestampClick,
+  isLoading,
 }: {
   content: string;
   sender: string;
   timestamps: number[];
   videoId?: string;
   onTimestampClick: (timestamp: number) => void;
+  isLoading: boolean;
 }) => {
   return (
     <div
@@ -83,24 +88,28 @@ const ChatMessage = ({
           sender === "AI" && content.length > 0 ? "1px solid #e5e3da" : "none",
       }}
     >
-      {content.length > 0 && (
-        <div className={styles.ChatMessage}>
-          <div
-            style={{
-              minWidth: "28px",
-              minHeight: "28px",
-              margin: "4px",
-              marginRight: "8px",
-            }}
-          >
-            {sender === "AI" ? <AIAvatar /> : <UserAvatar />}
-          </div>
-          <div
-            style={{ display: "flex", gap: "16px", flexDirection: "column" }}
-          >
+      <div className={styles.ChatMessage}>
+        <div
+          style={{
+            minWidth: "28px",
+            minHeight: "28px",
+            margin: "4px",
+            marginRight: "8px",
+          }}
+        >
+          {sender === "AI" ? <AIAvatar /> : <UserAvatar />}
+        </div>
+        <div style={{ display: "flex", gap: "16px", flexDirection: "column" }}>
+          {content.length === 0 && isLoading ? (
+            <div style={{ marginTop: "7px" }}>
+              <YLoading size="small" />
+            </div>
+          ) : (
             <YText fontType="h3" className={styles.MessageText}>
               {content}
             </YText>
+          )}
+          {sender === "AI" && (
             <div className={styles.TimestampContainer}>
               {timestamps.map((timestamp) => {
                 return (
@@ -115,9 +124,9 @@ const ChatMessage = ({
                 );
               })}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -133,8 +142,6 @@ const YoutubePlayer = ({
   playerRef: React.MutableRefObject<any>;
   onReady: YouTubeProps["onReady"];
 }) => {
-  const isMediumScreen = useMediaQuery({ query: "(max-width: 1400px)" });
-
   useEffect(() => {
     if (
       playerRef &&
@@ -252,8 +259,40 @@ const TranscriptViewer = ({
   );
 };
 
+export const VideoTitle = ({ title, url }: { title: string; url: string }) => {
+  return (
+    <div
+      className={styles.VideoTitle}
+      onClick={() => {
+        window.open(url, "_blank");
+      }}
+    >
+      <div
+        style={{
+          width: "16px",
+          height: "16px",
+          margin: "4px",
+          cursor: "pointer",
+        }}
+      >
+        <YoutubeIcon />
+      </div>
+      <YText fontType="h3">{title}</YText>
+      <div
+        style={{
+          width: "12px",
+          height: "12px",
+          margin: "4px",
+          marginTop: "3px",
+        }}
+      >
+        <LinkIcon />
+      </div>
+    </div>
+  );
+};
+
 const ChatPage: NextPage = () => {
-  const { data: sessionData } = useSession();
   const router = useRouter();
   const { id } = router.query;
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -279,10 +318,11 @@ const ChatPage: NextPage = () => {
     setUserInput,
     generateResponse,
     stopResponse,
+    isLoading,
     answerText,
   } = useYoutubeChat({ id: id as string });
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [messages, answerText]);
 
   if (!id) {
     // router.push("/chats");
@@ -321,6 +361,14 @@ const ChatPage: NextPage = () => {
 
   return (
     <PageLayout
+      limitWidth={false}
+      logo={false}
+      logoReplacementContent={
+        <VideoTitle
+          title={transcriptionCompleted.video.title as string}
+          url={transcriptionCompleted.video.url}
+        />
+      }
       rightContent={
         <div className={styles.TopNavBar}>
           <YText
@@ -330,25 +378,7 @@ const ChatPage: NextPage = () => {
               void router.push("/videos");
             }}
           >
-            📼 Videos
-          </YText>
-          <YText
-            fontType="h3"
-            className={styles.Text}
-            onClick={() => {
-              void router.push("/chats");
-            }}
-          >
-            💬 Chats
-          </YText>
-          <YText
-            fontType="h3"
-            className={styles.Text}
-            onClick={() => {
-              void router.push("/auth/account");
-            }}
-          >
-            Account
+            Back to Videos →
           </YText>
         </div>
       }
@@ -392,6 +422,7 @@ const ChatPage: NextPage = () => {
                       setPlayerTimestamp(timestamp);
                       startVideo();
                     }}
+                    isLoading={isLoading}
                   />
                 </div>
               );
@@ -405,19 +436,50 @@ const ChatPage: NextPage = () => {
               setValue={setUserInput}
               showSearchIcon={false}
               placeholder="Send a message"
-              onEnterClick={() => void generateResponse()}
+              onEnterClick={() => {
+                if (userInput.length === 0) return;
+                if (!isLoading) void generateResponse();
+              }}
               rightContent={
                 <div
                   style={{
-                    width: "16px",
-                    height: "16px",
-                    margin: "4px",
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center",
                     marginRight: "16px",
-                    cursor: "pointer",
                   }}
-                  onClick={() => void generateResponse()}
                 >
-                  <SendIcon />
+                  {isLoading && <YLoading size="small" />}
+                  {!isLoading ? (
+                    <div
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        margin: "4px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        if (userInput.length === 0) return;
+                        void generateResponse();
+                      }}
+                    >
+                      <SendIcon />
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: "14px",
+                        height: "14px",
+                        cursor: "pointer",
+                        marginTop: "-3px",
+                      }}
+                      onClick={() => {
+                        void stopResponse();
+                      }}
+                    >
+                      <StopIcon />
+                    </div>
+                  )}
                 </div>
               }
             />
@@ -425,83 +487,6 @@ const ChatPage: NextPage = () => {
         </div>
       </div>
     </PageLayout>
-  );
-
-  return (
-    <div>
-      {`chat with video: ${chatHistory?.video?.title as string}`}
-      <div style={{ marginTop: "20px" }}>
-        {messages.map((message) => {
-          return (
-            <div
-              key={message.id}
-              style={{
-                margin: "12px",
-                backgroundColor: message.sender === "AI" ? "lightblue" : "none",
-              }}
-            >
-              <div
-                style={{
-                  margin: "8px",
-                }}
-              >
-                {message.isStreaming ? answerText : message.content}
-              </div>
-              {message.videoTimestamps &&
-                message.videoTimestamps.length > 0 && (
-                  <div
-                    style={{ marginLeft: "40px", display: "flex", gap: "4px" }}
-                  >
-                    Timestamps:
-                    {message.videoTimestamps.map((timestamp) => {
-                      return (
-                        <div
-                          style={{
-                            minWidth: "40px",
-                            maxWidth: "fit-content",
-                          }}
-                          key={timestamp}
-                        >
-                          {timestamp}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-            </div>
-          );
-        })}
-        {/* {isStreaming && (
-          <div
-            style={{
-              margin: "12px",
-              backgroundColor: "lightblue",
-            }}
-          >
-            <div
-              style={{
-                margin: "8px",
-              }}
-            >
-              {answerText}
-            </div>
-          </div>
-        )} */}
-        <input
-          value={userInput}
-          onInput={(e) => {
-            setUserInput(e.currentTarget.value);
-          }}
-        ></input>
-        <button onClick={() => void generateResponse()}>Send</button>
-        <button onClick={() => void stopResponse()}>Stop</button>
-      </div>
-      <button
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
   );
 };
 

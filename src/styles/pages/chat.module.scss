@@ -90,9 +90,10 @@
 }
 
 .TranscriptWrapper {
-  padding: 20px 40px;
+  padding: 20px 20px;
   border: 1px solid $border-primary;
   border-radius: 4px;
+  background-color: $secondary-light;
 }
 
 .TranscriptSection {
@@ -101,10 +102,10 @@
   max-height: 200px;
   overflow-y: auto;
   @include smallScrollbar;
-  padding: 20px;
+  padding: 0px 20px;
 
   .Highlighted {
-    background-color: lighten($primary-red, 25%);
+    background-color: lighten($primary-red, 30%);
   }
 }
 
@@ -126,5 +127,19 @@
     left: 0;
     width: 100%;
     height: 100%;
+  }
+}
+
+.VideoTitle {
+  border: 1px solid $border-primary;
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  background-color: lighten($secondary-light, 4%);
+  cursor: pointer;
+  gap: 4px;
+
+  &:hover {
+    background-color: lighten($secondary-light, 2%);
   }
 }
