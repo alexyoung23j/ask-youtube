@@ -24,6 +24,7 @@ import { createRef, useEffect, useMemo, useRef, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { extractVideoId, secondsToTimestamp } from "~/utils/helpers";
 import { Inter } from "@next/font/google";
+import { useMediaQuery } from "react-responsive";
 
 const inter = Inter({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -132,6 +133,8 @@ const YoutubePlayer = ({
   playerRef: React.MutableRefObject<any>;
   onReady: YouTubeProps["onReady"];
 }) => {
+  const isMediumScreen = useMediaQuery({ query: "(max-width: 1400px)" });
+
   useEffect(() => {
     if (
       playerRef &&
@@ -144,8 +147,8 @@ const YoutubePlayer = ({
   }, [timestamp]);
 
   const opts = {
-    height: "390",
-    width: "640",
+    height: "100%",
+    width: "100%",
     playerVars: {
       // https://developers.google.com/youtube/player_parameters
       autoplay: 1 as 0 | 1 | undefined,
@@ -155,7 +158,13 @@ const YoutubePlayer = ({
     },
   };
 
-  return <YouTube videoId={videoId} opts={opts} onReady={onReady} />;
+  return (
+    <div className={styles.PlayerContainer}>
+      <div className={styles.Player}>
+        <YouTube videoId={videoId} opts={opts} onReady={onReady} />
+      </div>
+    </div>
+  );
 };
 
 interface TextChunk {
@@ -213,29 +222,31 @@ const TranscriptViewer = ({
 
   return (
     <div className={inter.className}>
-      <div ref={containerRef} className={styles.TranscriptSection}>
-        {allSentences.map((s, i) => {
-          const nextSentence = allSentences[i + 1];
-          const isLastInGroup =
-            !nextSentence || nextSentence.parentIndex !== s.parentIndex;
+      <div className={styles.TranscriptWrapper}>
+        <div ref={containerRef} className={styles.TranscriptSection}>
+          {allSentences.map((s, i) => {
+            const nextSentence = allSentences[i + 1];
+            const isLastInGroup =
+              !nextSentence || nextSentence.parentIndex !== s.parentIndex;
 
-          return (
-            <span
-              key={i}
-              ref={refs.current[i]}
-              className={
-                highlightedIndices.includes(i) ? styles.Highlighted : ""
-              }
-            >
-              {s.text + " "}
-              {isLastInGroup && (
-                <>
-                  <br /> <br />
-                </>
-              )}
-            </span>
-          );
-        })}
+            return (
+              <span
+                key={i}
+                ref={refs.current[i]}
+                className={
+                  highlightedIndices.includes(i) ? styles.Highlighted : ""
+                }
+              >
+                {s.text + " "}
+                {isLastInGroup && (
+                  <>
+                    <br /> <br />
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

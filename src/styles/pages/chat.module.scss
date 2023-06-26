@@ -11,6 +11,10 @@
     width: 50%;
     border-right: 1px solid $border-primary;
     background-color: $tertiary-light;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 24px;
   }
 
   .ChatSection {
@@ -85,14 +89,42 @@
   }
 }
 
+.TranscriptWrapper {
+  padding: 20px 40px;
+  border: 1px solid $border-primary;
+  border-radius: 4px;
+}
+
 .TranscriptSection {
   // display: flex;
   width: 100%;
-  max-height: 300px;
+  max-height: 200px;
   overflow-y: auto;
+  @include smallScrollbar;
   padding: 20px;
 
   .Highlighted {
     background-color: lighten($primary-red, 25%);
+  }
+}
+
+.PlayerContainer {
+  width: 100%;
+  padding: 0px 16px;
+  border-radius: 4px;
+  background-color: black;
+
+  .Player {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+  }
+  .Player iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
