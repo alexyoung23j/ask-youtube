@@ -20,45 +20,17 @@ import {
   UserAvatar,
   YoutubeIcon,
 } from "~/components/icons";
-import { createRef, useEffect, useRef, useState } from "react";
+import { createRef, useEffect, useMemo, useRef, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { extractVideoId, secondsToTimestamp } from "~/utils/helpers";
-import { time } from "console";
-import { set } from "date-fns";
+import { Inter } from "@next/font/google";
 
-// const Timestamp = ({
-//   timestamp,
-//   videoId,
-// }: {
-//   timestamp: number;
-//   videoId: string;
-// }) => {
-//   const onReady: YouTubeProps["onReady"] = (event: any) => {
-//     event.target.mute();
-//     event.target.seekTo(timestamp);
-//     event.target.playVideo();
-//     setTimeout(() => {
-//       console.log("ending at timestamp", timestamp);
-//       event.target.pauseVideo();
-//     }, 200);
-//   };
-
-//   const opts = {
-//     height: "200",
-//     width: "400",
-//     playerVars: {
-//       autoplay: 0 as 0 | 1 | undefined, // Typescript is not a good language lmao
-//       controls: 0 as 0 | 1 | undefined,
-//       disablekb: 1 as 0 | 1 | undefined,
-//       rel: 0 as 0 | 1 | undefined,
-//       showinfo: 0 as 0 | 1 | undefined,
-//       fs: 0 as 0 | 1 | undefined,
-//       modestbranding: 1 as 1 | undefined,
-//     },
-//   };
-
-//   return <YouTube videoId={videoId} opts={opts} onReady={onReady} />;
-// };
+const inter = Inter({
+  weight: ["100", "300", "400", "500", "700", "900"],
+  style: ["normal"],
+  display: "block",
+  subsets: ["latin"],
+});
 
 const Timestamp = ({
   timestamp,
@@ -206,7 +178,13 @@ const TranscriptViewer = ({
   transcript: Array<ChunkGroup>;
   timestamp: number;
 }) => {
-  const allSentences = transcript.flatMap((t) => t.sentences);
+  const allSentences = useMemo(
+    () =>
+      transcript.flatMap((t, tIndex) =>
+        t.sentences.map((s) => ({ ...s, parentIndex: tIndex }))
+      ),
+    [transcript]
+  );
   const refs = useRef(allSentences.map(() => createRef<HTMLSpanElement>()));
   const [highlightedIndices, setHighlightedIndices] = useState<number[]>([]);
 
@@ -225,7 +203,7 @@ const TranscriptViewer = ({
       const node = refs.current[idx]?.current;
       const container = containerRef.current;
       if (node && container) {
-        container.scrollTop = node.offsetTop - container.offsetTop;
+        container.scrollTop = node.offsetTop - container.offsetTop - 24;
       }
       setHighlightedIndices(
         [idx, idx + 1, idx + 2].filter((i) => i < allSentences.length)
@@ -234,17 +212,31 @@ const TranscriptViewer = ({
   }, [timestamp, allSentences]);
 
   return (
-    <div ref={containerRef} className={styles.TranscriptSection}>
-      {allSentences.map((s, i) => (
-        <span
-          key={i}
-          ref={refs.current[i]}
-          className={highlightedIndices.includes(i) ? styles.Highlighted : ""}
-        >
-          {s.text}
-          {/* {(i < allSentences.length - 1 && allSentences[i + 1].start > s.end) ? <br /> : ' '} */}
-        </span>
-      ))}
+    <div className={inter.className}>
+      <div ref={containerRef} className={styles.TranscriptSection}>
+        {allSentences.map((s, i) => {
+          const nextSentence = allSentences[i + 1];
+          const isLastInGroup =
+            !nextSentence || nextSentence.parentIndex !== s.parentIndex;
+
+          return (
+            <span
+              key={i}
+              ref={refs.current[i]}
+              className={
+                highlightedIndices.includes(i) ? styles.Highlighted : ""
+              }
+            >
+              {s.text + " "}
+              {isLastInGroup && (
+                <>
+                  <br /> <br />
+                </>
+              )}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 };
