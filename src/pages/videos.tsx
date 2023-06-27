@@ -20,18 +20,20 @@ import YModal from "~/components/YModal";
 import { UploadIcon } from "~/components/icons";
 
 const VideosPage: NextPage = () => {
-  const { data: sessionData } = useSession();
   const generateTranscription =
     api.transcribe.startTranscriptionJob.useMutation();
   const createChatHistory = api.chat.createChatHistory.useMutation();
   const deleteVideo = api.video.deleteVideo.useMutation();
   const router = useRouter();
+  const { addNew } = router.query;
   const { data: videos, refetch } = api.video.getUserVideos.useQuery();
   const [url, setUrl] = useState("");
   const [deleteUrl, setDeleteUrl] = useState("");
   const [uploadUrlError, setUploadUrlError] = useState("");
   const [searchString, setSearchString] = useState("");
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(
+    addNew === "true" ? true : false
+  );
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

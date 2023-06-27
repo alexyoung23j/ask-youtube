@@ -8,6 +8,7 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+const BITCOIN_VIDEO_URL = "https://www.youtube.com/watch?v=bBC-nXj3Ng4";
 
 export const videoRouter = createTRPCRouter({
   deleteVideo: protectedProcedure
@@ -66,4 +67,22 @@ export const videoRouter = createTRPCRouter({
       return connectedVideo.video;
     });
   }),
+  getDemoVideo: publicProcedure
+    .input(z.object({ videoName: z.string() }))
+    .query(async ({ ctx }) => {
+      const demoVideo = await ctx.prisma.video.findFirst({
+        where: {
+          url: BITCOIN_VIDEO_URL,
+        },
+      });
+
+      // Create a chat history for the demo video
+      const chatHistory = await ctx.prisma.chatHistory.create({
+        data: {
+          videoUrl: BITCOIN_VIDEO_URL,
+        },
+      });
+
+      return { video: demoVideo, generatedChatHistory: chatHistory };
+    }),
 });

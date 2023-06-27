@@ -42,7 +42,7 @@ const useCustomCompletion = ({
         } else {
           const answer = parsedCompletion.slice(
             startInd + 8,
-            parsedCompletion.length - 6
+            parsedCompletion.length - 7
           );
           setAnswerText(answer);
         }

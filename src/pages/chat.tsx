@@ -19,278 +19,22 @@ import {
   LinkIcon,
   SendIcon,
   StopIcon,
+  UploadIcon,
   UserAvatar,
   YoutubeIcon,
 } from "~/components/icons";
 import { createRef, useEffect, useMemo, useRef, useState } from "react";
-import YouTube, { YouTubeProps } from "react-youtube";
 import { extractVideoId, secondsToTimestamp } from "~/utils/helpers";
-import { Inter } from "@next/font/google";
-import { useMediaQuery } from "react-responsive";
+
 import YLoading from "~/components/YLoading";
-
-const inter = Inter({
-  weight: ["100", "300", "400", "500", "700", "900"],
-  style: ["normal"],
-  display: "block",
-  subsets: ["latin"],
-});
-
-const Timestamp = ({
-  timestamp,
-  onClick,
-}: {
-  timestamp: number;
-  onClick?: () => void;
-}) => {
-  return (
-    <div className={styles.Timestamp} onClick={onClick}>
-      <div
-        style={{
-          minWidth: "20px",
-          minHeight: "20px",
-          marginTop: "3px",
-        }}
-      >
-        <YoutubeIcon />
-      </div>
-      <YText fontType="h4" fontWeight="light">
-        {secondsToTimestamp(timestamp)}
-      </YText>
-    </div>
-  );
-};
-
-const ChatMessage = ({
-  content,
-  sender,
-  timestamps,
-  videoId,
-  onTimestampClick,
-  isLoading,
-}: {
-  content: string;
-  sender: string;
-  timestamps: number[];
-  videoId?: string;
-  onTimestampClick: (timestamp: number) => void;
-  isLoading: boolean;
-}) => {
-  return (
-    <div
-      style={{
-        backgroundColor: sender === "AI" ? "#faf9f6" : "none",
-        display: "flex",
-        justifyContent: "center",
-        borderTop:
-          sender === "AI" && content.length > 0 ? "1px solid #e5e3da" : "none",
-        borderBottom:
-          sender === "AI" && content.length > 0 ? "1px solid #e5e3da" : "none",
-      }}
-    >
-      <div className={styles.ChatMessage}>
-        <div
-          style={{
-            minWidth: "28px",
-            minHeight: "28px",
-            margin: "4px",
-            marginRight: "8px",
-          }}
-        >
-          {sender === "AI" ? <AIAvatar /> : <UserAvatar />}
-        </div>
-        <div style={{ display: "flex", gap: "16px", flexDirection: "column" }}>
-          {content.length === 0 && isLoading ? (
-            <div style={{ marginTop: "7px" }}>
-              <YLoading size="small" />
-            </div>
-          ) : (
-            <YText fontType="h3" className={styles.MessageText}>
-              {content}
-            </YText>
-          )}
-          {sender === "AI" && (
-            <div className={styles.TimestampContainer}>
-              {timestamps.map((timestamp) => {
-                return (
-                  <div key={timestamp}>
-                    <Timestamp
-                      timestamp={timestamp}
-                      onClick={() => {
-                        onTimestampClick(timestamp);
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const YoutubePlayer = ({
-  timestamp,
-  videoId,
-  playerRef,
-  onReady,
-}: {
-  timestamp: number;
-  videoId: string;
-  playerRef: React.MutableRefObject<any>;
-  onReady: YouTubeProps["onReady"];
-}) => {
-  useEffect(() => {
-    if (
-      playerRef &&
-      playerRef.current &&
-      typeof playerRef.current.seekTo === "function" &&
-      timestamp !== 0
-    ) {
-      playerRef.current.seekTo(timestamp, true);
-    }
-  }, [timestamp]);
-
-  const opts = {
-    height: "100%",
-    width: "100%",
-    playerVars: {
-      // https://developers.google.com/youtube/player_parameters
-      autoplay: 1 as 0 | 1 | undefined,
-      rel: 0 as 0 | 1 | undefined,
-      showinfo: 0 as 0 | 1 | undefined,
-      modestbranding: 1 as 1 | undefined,
-    },
-  };
-
-  return (
-    <div className={styles.PlayerContainer}>
-      <div className={styles.Player}>
-        <YouTube videoId={videoId} opts={opts} onReady={onReady} />
-      </div>
-    </div>
-  );
-};
-
-interface TextChunk {
-  start: number;
-  end: number;
-  text: string;
-}
-
-interface ChunkGroup {
-  start: number;
-  end: number;
-  num_words: number;
-  sentences: Array<TextChunk>;
-}
-
-const TranscriptViewer = ({
-  transcript,
-  timestamp,
-}: {
-  transcript: Array<ChunkGroup>;
-  timestamp: number;
-}) => {
-  const allSentences = useMemo(
-    () =>
-      transcript.flatMap((t, tIndex) =>
-        t.sentences.map((s) => ({ ...s, parentIndex: tIndex }))
-      ),
-    [transcript]
-  );
-  const refs = useRef(allSentences.map(() => createRef<HTMLSpanElement>()));
-  const [highlightedIndices, setHighlightedIndices] = useState<number[]>([]);
-
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let idx = allSentences.findIndex(
-      (s) => timestamp >= s.start && timestamp <= s.end
-    );
-    if (idx === -1) {
-      idx = allSentences.findIndex((s) => timestamp < s.start);
-      if (idx !== -1) idx -= 1;
-    }
-
-    if (idx !== -1) {
-      const node = refs.current[idx]?.current;
-      const container = containerRef.current;
-      if (node && container) {
-        container.scrollTop = node.offsetTop - container.offsetTop - 24;
-      }
-      setHighlightedIndices(
-        [idx, idx + 1, idx + 2].filter((i) => i < allSentences.length)
-      );
-    }
-  }, [timestamp, allSentences]);
-
-  return (
-    <div className={inter.className}>
-      <div className={styles.TranscriptWrapper}>
-        <div ref={containerRef} className={styles.TranscriptSection}>
-          {allSentences.map((s, i) => {
-            const nextSentence = allSentences[i + 1];
-            const isLastInGroup =
-              !nextSentence || nextSentence.parentIndex !== s.parentIndex;
-
-            return (
-              <span
-                key={i}
-                ref={refs.current[i]}
-                className={
-                  highlightedIndices.includes(i) ? styles.Highlighted : ""
-                }
-              >
-                {s.text + " "}
-                {isLastInGroup && (
-                  <>
-                    <br /> <br />
-                  </>
-                )}
-              </span>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const VideoTitle = ({ title, url }: { title: string; url: string }) => {
-  return (
-    <div
-      className={styles.VideoTitle}
-      onClick={() => {
-        window.open(url, "_blank");
-      }}
-    >
-      <div
-        style={{
-          width: "16px",
-          height: "16px",
-          margin: "4px",
-          cursor: "pointer",
-        }}
-      >
-        <YoutubeIcon />
-      </div>
-      <YText fontType="h3">{title}</YText>
-      <div
-        style={{
-          width: "12px",
-          height: "12px",
-          margin: "4px",
-          marginTop: "3px",
-        }}
-      >
-        <LinkIcon />
-      </div>
-    </div>
-  );
-};
+import { YoutubePlayer } from "~/components/YoutubePlayer";
+import {
+  type ChunkGroup,
+  TranscriptViewer,
+} from "~/components/TranscriptViewer";
+import { ChatMessage } from "~/components/ChatMessage";
+import { VideoTitle } from "~/components/VideoTitle";
+import YButton from "~/components/YButton";
 
 const ChatPage: NextPage = () => {
   const router = useRouter();
@@ -371,6 +115,27 @@ const ChatPage: NextPage = () => {
       }
       rightContent={
         <div className={styles.TopNavBar}>
+          <YButton
+            label="Upload"
+            onClick={() => {
+              router.push("/videos?addNew=true");
+            }}
+          >
+            <div style={{ display: "flex", gap: "4px" }}>
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  margin: "4px",
+                }}
+              >
+                <UploadIcon />
+              </div>
+              <YText fontColor="white" fontType="h3" wrap="nowrap">
+                New Video
+              </YText>
+            </div>
+          </YButton>
           <YText
             fontType="h3"
             className={styles.Text}

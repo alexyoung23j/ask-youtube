@@ -77,7 +77,7 @@ export const chatRouter = createTRPCRouter({
         video: video,
       };
     }),
-  getChatHistory: protectedProcedure
+  getChatHistory: publicProcedure
     .input(z.object({ chatHistoryId: z.string() }))
     .query(async ({ input, ctx }) => {
       const { chatHistoryId } = input;
@@ -85,7 +85,6 @@ export const chatRouter = createTRPCRouter({
       const chatHistory = await ctx.prisma.chatHistory.findFirst({
         where: {
           id: chatHistoryId,
-          userId: ctx.session.user?.id,
         },
         include: {
           messages: {
@@ -103,7 +102,7 @@ export const chatRouter = createTRPCRouter({
 
       return chatHistory;
     }),
-  createUserMessage: protectedProcedure
+  createUserMessage: publicProcedure
     .input(
       z.object({
         chatHistoryId: z.string(),
@@ -117,7 +116,6 @@ export const chatRouter = createTRPCRouter({
       const chatHistory = await ctx.prisma.chatHistory.findFirst({
         where: {
           id: chatHistoryId,
-          userId: ctx.session.user?.id,
         },
       });
 
@@ -140,7 +138,7 @@ export const chatRouter = createTRPCRouter({
 
       return newMessage;
     }),
-  createAIMessage: protectedProcedure
+  createAIMessage: publicProcedure
     .input(
       z.object({
         chatHistoryId: z.string(),
@@ -156,7 +154,6 @@ export const chatRouter = createTRPCRouter({
       const chatHistory = await ctx.prisma.chatHistory.findFirst({
         where: {
           id: chatHistoryId,
-          userId: ctx.session.user?.id,
         },
       });
 

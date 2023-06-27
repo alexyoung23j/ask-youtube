@@ -43,10 +43,19 @@ const useYoutubeChat = ({ id }: { id: string }) => {
     },
     onMessageEnd: async (text: string) => {
       // Optimistic UI update
-      const parsedText = JSON.parse(text) as {
-        answer: string;
-        usedTimestamps: number[];
+      let parsedText = {
+        answer:
+          "Something went wrong and I was unable to answer you! Please try again.",
+        usedTimestamps: [] as number[],
       };
+      try {
+        parsedText = JSON.parse(text) as {
+          answer: string;
+          usedTimestamps: number[];
+        };
+      } catch (e) {
+        console.log(e);
+      }
 
       // Update the existing streamed message in the UI
       const timestamps = removeOverlappingTimestamps(
