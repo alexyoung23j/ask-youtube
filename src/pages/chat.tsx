@@ -260,16 +260,11 @@ const ChatPage: NextPage = () => {
         <div className={styles.VideoSection}>
           <YoutubePlayer
             onReady={onReady}
+            onClick={() => {setPlayerTimestamp(0)}}
             timestamp={playerTimestamp}
             playerRef={playerRef}
             videoId={videoId as string}
-          />
-          <TranscriptViewer
-            transcript={
-              transcriptionCompleted.video
-                .transcription as unknown as Array<ChunkGroup>
-            }
-            timestamp={playerTimestamp}
+            transcription={transcriptionCompleted.video.transcription}
           />
         </div>
         <div className={styles.ChatSection}>
