@@ -52,7 +52,7 @@ export const ChatMessage = ({
               {content}
             </YText>
           )}
-          {sender === "AI" && (
+          {sender === "AI" && timestamps.length > 0 && (
             <div className={styles.TimestampContainer}>
               {timestamps.map((timestamp) => {
                 return (

@@ -21,7 +21,7 @@ model Video {
   length        Int?
   transcription Json?
   chatHistory   ChatHistory[]
-  connectedUsers UserConnectedVideos[]
+  connectedUsers UserConnectedVideos[] 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

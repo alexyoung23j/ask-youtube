@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
+import ytdl from "ytdl-core";
 import axios from "axios";
 import { parseYouTubeURL } from "~/utils/helpers";
 import { TRPCError } from "@trpc/server";
 
 export const transcriptionRouter = createTRPCRouter({
-  startTranscriptionJob: publicProcedure
+  startTranscriptionJob: protectedProcedure
     .input(z.object({ url: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const { url } = input;
@@ -43,7 +47,7 @@ export const transcriptionRouter = createTRPCRouter({
           // Create connection
           await ctx.prisma.userConnectedVideos.create({
             data: {
-              userId: ctx.session?.user?.id as string,
+              userId: ctx.session?.user?.id,
               videoUrl: existingVideo.url,
             },
           });
@@ -51,9 +55,13 @@ export const transcriptionRouter = createTRPCRouter({
         return existingVideo;
       }
 
+      const videoInfo = await ytdl.getInfo(url);
+
       const newVideo = await ctx.prisma.video.create({
         data: {
           url: parsedUrl,
+          title: videoInfo.videoDetails.title,
+          length: parseInt(videoInfo.videoDetails.lengthSeconds),
         },
       });
 
@@ -61,7 +69,7 @@ export const transcriptionRouter = createTRPCRouter({
         // Create connection
         await ctx.prisma.userConnectedVideos.create({
           data: {
-            userId: ctx.session?.user?.id as string,
+            userId: ctx.session?.user?.id,
             videoUrl: newVideo.url,
           },
         });

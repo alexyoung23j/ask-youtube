@@ -35,6 +35,7 @@ import {
 import { ChatMessage } from "~/components/ChatMessage";
 import { VideoTitle } from "~/components/VideoTitle";
 import YButton from "~/components/YButton";
+import YSpinner from "~/components/YSpinner";
 
 const ChatPage: NextPage = () => {
   const router = useRouter();
@@ -69,12 +70,119 @@ const ChatPage: NextPage = () => {
   useEffect(scrollToBottom, [messages, answerText]);
 
   if (!id) {
-    // router.push("/chats");
-    return <div>Something went wrong.</div>;
+    return (
+      <PageLayout
+        limitWidth={false}
+        rightContent={
+          <div className={styles.TopNavBar}>
+            <YButton
+              label="Upload"
+              onClick={() => {
+                router.push("/videos?addNew=true");
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px" }}>
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    margin: "4px",
+                  }}
+                >
+                  <UploadIcon />
+                </div>
+                <YText fontColor="white" fontType="h3" wrap="nowrap">
+                  New Video
+                </YText>
+              </div>
+            </YButton>
+            <YText
+              fontType="h3"
+              className={styles.Text}
+              onClick={() => {
+                void router.push("/videos");
+              }}
+            >
+              Back to Videos →
+            </YText>
+          </div>
+        }
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          <YSpinner size="large" color="#a6a6a6" />
+          <YText fontType="h3">This chat does not exist.</YText>
+        </div>
+      </PageLayout>
+    );
   }
 
   if (!transcriptionCompleted?.status || !transcriptionCompleted.video) {
-    return <div>Transcribing...</div>;
+    return (
+      <PageLayout
+        limitWidth={false}
+        rightContent={
+          <div className={styles.TopNavBar}>
+            <YButton
+              label="Upload"
+              onClick={() => {
+                router.push("/videos?addNew=true");
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px" }}>
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    margin: "4px",
+                  }}
+                >
+                  <UploadIcon />
+                </div>
+                <YText fontColor="white" fontType="h3" wrap="nowrap">
+                  New Video
+                </YText>
+              </div>
+            </YButton>
+            <YText
+              fontType="h3"
+              className={styles.Text}
+              onClick={() => {
+                void router.push("/videos");
+              }}
+            >
+              Back to Videos →
+            </YText>
+          </div>
+        }
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          <YSpinner size="large" color="#a6a6a6" />
+          <YText fontType="h3">
+            Video transcription not yet complete. Try again soon.
+          </YText>
+        </div>
+      </PageLayout>
+    );
   }
 
   const videoId = extractVideoId(transcriptionCompleted.video.url);

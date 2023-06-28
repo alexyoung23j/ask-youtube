@@ -43,7 +43,7 @@ const VideosPage: NextPage = () => {
     }
   }, [url]);
 
-  const createChat = async (videoUrl: string) => {
+  const createNewChat = async (videoUrl: string) => {
     try {
       // Transcribe/fetch and create chat history
       setUploadUrlError("");
@@ -141,7 +141,7 @@ const VideosPage: NextPage = () => {
             />
           }
           onSuccess={() => {
-            createChat(url);
+            createNewChat(url);
           }}
           errorText={uploadUrlError}
           successLabel="Add"
@@ -208,7 +208,7 @@ const VideosPage: NextPage = () => {
                     title={video.title as string}
                     onTitleClick={() => {
                       // Create the new chat history
-                      createChat(video.url);
+                      createNewChat(video.url);
                     }}
                     date={video.createdAt}
                     leftLabelOne={length}
