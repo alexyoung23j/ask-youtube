@@ -73,7 +73,7 @@ const buildDocumentsForPrompt = ({
       // Extract the specified sentence and its neighbors
       const sentences = correspondingTranscript.sentences;
       const startIdx = Math.max(0, sentenceIndex - 2);
-      const endIdx = Math.min(sentences.length, sentenceIndex + 2);
+      const endIdx = Math.min(sentences.length, sentenceIndex + 4);
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
       // Concatenate selected sentences
@@ -274,7 +274,7 @@ export default async function handler(
       chatHistory: new ChatMessageHistory(pastMessages),
       inputKey: "history",
     }),
-    // verbose: true, // TOGGLE ON FOR PROMPT REVIEW
+    verbose: true, // TOGGLE ON FOR PROMPT REVIEW
     prompt: chatPrompt,
   });
 

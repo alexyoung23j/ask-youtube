@@ -172,7 +172,6 @@ export const chatRouter = createTRPCRouter({
           },
         });
 
-        console.log(responseMessage);
         return responseMessage;
       }
 
@@ -212,7 +211,6 @@ export const chatRouter = createTRPCRouter({
         },
       });
 
-      console.log(responseMessage);
       return responseMessage;
     }),
   deleteChat: protectedProcedure

@@ -16,6 +16,7 @@ import Fuse from "fuse.js";
 import YButton from "~/components/YButton";
 import YInput from "~/components/YInput";
 import YModal from "~/components/YModal";
+import YSpinner from "~/components/YSpinner";
 
 const ChatListPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -26,7 +27,11 @@ const ChatListPage: NextPage = () => {
   const deleteAllChatHistory = api.chat.deleteAllUserChats.useMutation();
 
   const router = useRouter();
-  const { data: chatHistories, refetch } = api.chat.getChatHistories.useQuery();
+  const {
+    data: chatHistories,
+    refetch,
+    isLoading: chatsLoading,
+  } = api.chat.getChatHistories.useQuery();
   const [searchString, setSearchString] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAllModalOpen, setDeleteAllModalOpen] = useState(false);
@@ -168,6 +173,19 @@ const ChatListPage: NextPage = () => {
                 }}
               />
             </div>
+            {chatsLoading && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "16px",
+                  justifyContent: "center",
+                }}
+              >
+                <YSpinner size="medium" color="#a6a6a6" />
+              </div>
+            )}
             {searchFilteredChats?.map((chat) => {
               if (!chat.messages[0]?.content) return null;
               return (

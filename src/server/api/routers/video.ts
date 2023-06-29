@@ -61,6 +61,9 @@ export const videoRouter = createTRPCRouter({
       include: {
         video: true,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return connectedVideos.map((connectedVideo) => {

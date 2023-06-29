@@ -18,6 +18,8 @@ import YButton from "~/components/YButton";
 import Fuse from "fuse.js";
 import YModal from "~/components/YModal";
 import { UploadIcon } from "~/components/icons";
+import YSpinner from "~/components/YSpinner";
+import { set } from "date-fns";
 
 const VideosPage: NextPage = () => {
   const generateTranscription =
@@ -26,7 +28,11 @@ const VideosPage: NextPage = () => {
   const deleteVideo = api.video.deleteVideo.useMutation();
   const router = useRouter();
   const { addNew } = router.query;
-  const { data: videos, refetch } = api.video.getUserVideos.useQuery();
+  const {
+    data: videos,
+    refetch,
+    isLoading: videosLoading,
+  } = api.video.getUserVideos.useQuery();
   const [url, setUrl] = useState("");
   const [deleteUrl, setDeleteUrl] = useState("");
   const [uploadUrlError, setUploadUrlError] = useState("");
@@ -43,19 +49,32 @@ const VideosPage: NextPage = () => {
     }
   }, [url]);
 
-  const createNewChat = async (videoUrl: string) => {
+  const uploadVideo = async (videoUrl: string) => {
     try {
       // Transcribe/fetch and create chat history
       setUploadUrlError("");
       const parsedUrl = parseYouTubeURL(videoUrl);
+      setUploadModalOpen(false);
       const video = await generateTranscription.mutateAsync({ url: parsedUrl });
+      refetch();
+
+      setTimeout(() => {
+        refetch();
+      }, 10000);
+    } catch (e) {
+      console.log(e);
+      setUploadUrlError("Invalid URL");
+    }
+  };
+
+  const createNewChatHistory = async (videoUrl: string) => {
+    try {
       const chatHistory = await createChatHistory.mutateAsync({
-        videoUrl: video.url,
+        videoUrl,
       });
       router.push(`/chat?id=${chatHistory.id}`);
     } catch (e) {
       console.log(e);
-      setUploadUrlError("Invalid URL");
     }
   };
 
@@ -141,7 +160,7 @@ const VideosPage: NextPage = () => {
             />
           }
           onSuccess={() => {
-            createNewChat(url);
+            uploadVideo(url);
           }}
           errorText={uploadUrlError}
           successLabel="Add"
@@ -190,6 +209,19 @@ const VideosPage: NextPage = () => {
                 </div>
               </YButton>
             </div>
+            {videosLoading && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "16px",
+                  justifyContent: "center",
+                }}
+              >
+                <YSpinner size="medium" color="#a6a6a6" />
+              </div>
+            )}
             {searchFilteredVideos?.map((video) => {
               let length;
               if (!video.length) {
@@ -208,7 +240,8 @@ const VideosPage: NextPage = () => {
                     title={video.title as string}
                     onTitleClick={() => {
                       // Create the new chat history
-                      createNewChat(video.url);
+                      if (video.transcription !== null)
+                        createNewChatHistory(video.url);
                     }}
                     date={video.createdAt}
                     leftLabelOne={length}
@@ -221,6 +254,7 @@ const VideosPage: NextPage = () => {
                     onIconClick={() => {
                       window.open(video.url, "_blank");
                     }}
+                    transcribing={video.transcription === null}
                   />
                 </div>
               );
