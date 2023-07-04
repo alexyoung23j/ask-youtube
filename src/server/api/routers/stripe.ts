@@ -54,8 +54,8 @@ export const stripeRouter = createTRPCRouter({
         success_url: `${process.env.NEXTAUTH_URL as string}/auth/account`,
         cancel_url: `${process.env.NEXTAUTH_URL as string}/auth/account`,
       });
-      console.log("im hereee");
     } else {
+      // Customer already exists, simply return the billing portal
       checkoutSession = await stripe.billingPortal.sessions.create({
         customer: customer.id,
         return_url: `${process.env.NEXTAUTH_URL as string}/auth/account`,

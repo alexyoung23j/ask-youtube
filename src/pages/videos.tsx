@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-floating-promises */
@@ -54,16 +55,17 @@ const VideosPage: NextPage = () => {
       // Transcribe/fetch and create chat history
       setUploadUrlError("");
       const parsedUrl = parseYouTubeURL(videoUrl);
-      setUploadModalOpen(false);
       const video = await generateTranscription.mutateAsync({ url: parsedUrl });
+      setUploadModalOpen(false);
+      setUrl("");
       refetch();
 
       setTimeout(() => {
         refetch();
       }, 10000);
-    } catch (e) {
-      console.log(e);
-      setUploadUrlError("Invalid URL");
+    } catch (e: any) {
+      console.log(e.message);
+      setUploadUrlError(e.message as string);
     }
   };
 
@@ -148,7 +150,10 @@ const VideosPage: NextPage = () => {
       <div className={styles.VideosPage}>
         <YModal
           isOpen={uploadModalOpen}
-          onCancel={() => setUploadModalOpen(false)}
+          onCancel={() => {
+            setUploadModalOpen(false);
+            setUrl("");
+          }}
           title="Add Video"
           subtitle="Enter a YouTube URL to add a video to your library."
           content={
@@ -165,6 +170,7 @@ const VideosPage: NextPage = () => {
           errorText={uploadUrlError}
           successLabel="Add"
           cancelLabel="Cancel"
+          loading={generateTranscription.isLoading}
         />
         <YModal
           isOpen={deleteModalOpen}

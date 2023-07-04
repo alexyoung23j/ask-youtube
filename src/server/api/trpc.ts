@@ -121,6 +121,45 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   });
 });
 
+const enforceUserUploadLimit = t.middleware(async ({ ctx, next }) => {
+  const user = await ctx.prisma.user.findUnique({
+    where: { id: ctx?.session?.user.id },
+  });
+
+  if (!ctx.session || !ctx.session.user || !user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const stripeCustomer = await ctx.prisma.stripeCustomer.findFirst({
+    where: { userId: ctx?.session?.user.id },
+  });
+
+  const stripeSubscription = await ctx.prisma.stripeSubscription.findFirst({
+    where: { stripeCustomerId: stripeCustomer?.id },
+  });
+
+  const numVideosUploaded = user?.numUploadedVideos;
+
+  console.log({ stripeCustomer, stripeSubscription, numVideosUploaded });
+
+  if (
+    (!stripeCustomer || stripeSubscription?.status !== "active") &&
+    numVideosUploaded > 0
+  ) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be subscribed to upload more videos.",
+    });
+  }
+
+  return next({
+    ctx: {
+      // infers the `session` as non-nullable
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
 /**
  * Protected (authenticated) procedure
  *
@@ -130,3 +169,6 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+export const protectedProcedureWithUploadLimit = t.procedure
+  .use(enforceUserIsAuthed)
+  .use(enforceUserUploadLimit);

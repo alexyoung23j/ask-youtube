@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import router from "next/router";
+import router, { useRouter } from "next/router";
 import YText from "~/components/YText";
 import PageLayout from "~/components/layouts";
 import styles from "@/styles/pages/chats.module.scss";
@@ -12,6 +12,7 @@ import { redirectIfNotAuthed } from "~/utils/routing";
 const AccountPage = () => {
   const { data: stripeCustomerData } =
     api.stripe.getUserSubscriptionStatus.useQuery();
+  const router = useRouter();
 
   console.log({ stripeCustomerData });
 
@@ -26,7 +27,7 @@ const AccountPage = () => {
   const onUpgradeClick = async () => {
     const res = await createStripeCustomerAndPortal.mutateAsync();
     console.log({ res });
-    window.open(res.billingUrl as string, "_blank");
+    void router.push(res.billingUrl as string);
   };
 
   return (

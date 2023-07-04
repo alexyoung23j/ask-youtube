@@ -25,8 +25,9 @@ export const handleInvoicePaid = async ({
     return;
   }
 
+  let stripeSubscription;
   try {
-    const stripeSubscription = await prisma.stripeSubscription.findFirst({
+    stripeSubscription = await prisma.stripeSubscription.findFirst({
       where: {
         id: subscriptionId as string,
       },
@@ -34,7 +35,19 @@ export const handleInvoicePaid = async ({
 
     if (!stripeSubscription) {
       // Both checks needed to handle first invoice of 0
-      throw new Error("Stripe subscription not found");
+      setTimeout(() => {
+        // Wait for subscription to be created: TODO: fix this hack
+      }, 1500);
+
+      stripeSubscription = await prisma.stripeSubscription.findFirst({
+        where: {
+          id: subscriptionId as string,
+        },
+      });
+
+      if (!stripeSubscription) {
+        throw new Error("Stripe subscription not found");
+      }
     }
 
     let stripeInvoice;
