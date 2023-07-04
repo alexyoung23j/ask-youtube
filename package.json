@@ -9,7 +9,9 @@
     "deploy-functions": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy transcriptionJob --runtime nodejs18 --trigger-http --source build/ --entry-point transcriptionJob",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start-prod": "next start"
+    "start-prod": "next start",
+    "reset-db": "yarn --cwd prisma prisma migrate reset --force && prisma migrate deploy",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe-webhook --latest"
   },
   "dependencies": {
     "@deepgram/sdk": "^2.1.1",
@@ -34,6 +36,7 @@
     "date-fns": "^2.30.0",
     "fuse.js": "^6.6.2",
     "langchain": "^0.0.92",
+    "micro": "^10.0.1",
     "next": "^13.4.2",
     "next-auth": "^4.22.1",
     "nodemon": "^2.0.22",
@@ -46,6 +49,7 @@
     "react-youtube": "^10.1.0",
     "sass": "^1.63.6",
     "scss": "^0.2.4",
+    "stripe": "^12.11.0",
     "superjson": "1.12.2",
     "uuid": "^9.0.0",
     "ytdl-core": "^4.11.4",
