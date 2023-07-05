@@ -6,7 +6,7 @@ import PageLayout from "~/components/layouts";
 import styles from "@/styles/pages/account.module.scss";
 import YButton from "~/components/YButton";
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { GetServerSidePropsContext } from "next";
 import { redirectIfNotAuthed } from "~/utils/routing";
 import Head from "next/head";
@@ -25,7 +25,7 @@ const PricingWidget = ({ hasSubscription }: { hasSubscription: boolean }) => {
     <div style={{ width: "fit-contents" }}>
       <div className={styles.Card}>
         <YText fontType="h3" className={styles.CardHeader}>
-          Upgrade your account
+          {hasSubscription ? "Your Plan: " : "Upgrade your account"}
         </YText>
         <div className={styles.CardContent}>
           <div className={styles.PricingCard}>
@@ -35,10 +35,34 @@ const PricingWidget = ({ hasSubscription }: { hasSubscription: boolean }) => {
               <YText className={styles.PricingUnits}>per month</YText>
             </div>
             <YButton
-              label="Subscribe"
+              label={hasSubscription ? "Update Subscription" : "Subscribe"}
               className={styles.SubscribeButton}
               onClick={onUpgradeClick}
             />
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                flexDirection: "column",
+                marginTop: "10px",
+              }}
+            >
+              <YText fontType="h4" className={styles.FeatureText}>
+                Includes:
+              </YText>
+              <YText fontType="h4" className={styles.FeatureText}>
+                - No upload limit
+              </YText>
+              <YText fontType="h4" className={styles.FeatureText}>
+                - No chat limit
+              </YText>
+              <YText fontType="h4" className={styles.FeatureText}>
+                - Fast transcriptions
+              </YText>
+              <YText fontType="h4" className={styles.FeatureText}>
+                - 2 hour video limit
+              </YText>
+            </div>
           </div>
         </div>
       </div>
@@ -97,6 +121,7 @@ const AccountPage = () => {
       }
     >
       <div className={styles.AccountListPage}>
+        <YText className={styles.AccountText}>Account</YText>
         <div className={styles.Card}>
           <YText fontType="h3" className={styles.CardHeader}>
             Email
@@ -113,6 +138,13 @@ const AccountPage = () => {
           </div>
         </div>
         <PricingWidget hasSubscription={hasStripeSubscription} />
+        <YButton
+          label="Sign Out"
+          onClick={() => {
+            void signOut();
+          }}
+          className={styles.SignOutButton}
+        />
       </div>
     </PageLayout>
   );
