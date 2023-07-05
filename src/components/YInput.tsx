@@ -19,6 +19,7 @@ const YInput = ({
   showSearchIcon = true,
   placeholder = "Search",
   rightContent,
+  disabled = false,
 }: {
   value: string;
   setValue: (value: string) => void;
@@ -27,6 +28,7 @@ const YInput = ({
   showSearchIcon?: boolean;
   placeholder?: string;
   rightContent?: React.ReactNode;
+  disabled?: boolean;
 }) => {
   return (
     <div className={getClassName(ComponentType.Input, styles, {}, className)}>
@@ -57,6 +59,7 @@ const YInput = ({
               onEnterClick();
             }
           }}
+          disabled={disabled}
         ></input>
       </div>
       {rightContent && rightContent}
