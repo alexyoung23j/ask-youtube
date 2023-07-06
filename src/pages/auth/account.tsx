@@ -76,15 +76,12 @@ const AccountPage = () => {
     api.stripe.getUserSubscriptionStatus.useQuery();
   const router = useRouter();
 
-  const isStripeCustomer = stripeCustomerData?.stripeCustomer !== null;
   const hasStripeSubscription =
     (stripeCustomerData?.stripeCustomer?.StripeSubscriptions &&
       stripeCustomerData?.stripeCustomer?.StripeSubscriptions?.length > 0 &&
       stripeCustomerData?.stripeCustomer?.StripeSubscriptions[0]?.status ===
         "active") ??
     false;
-
-  console.log({ isStripeCustomer, hasStripeSubscription });
 
   return (
     <PageLayout

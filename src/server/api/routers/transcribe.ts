@@ -69,6 +69,13 @@ export const transcriptionRouter = createTRPCRouter({
 
       const videoInfo = await ytdl.getInfo(url);
 
+      if (parseInt(videoInfo?.videoDetails?.lengthSeconds) > 7200) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Video is too long",
+        });
+      }
+
       const newVideo = await ctx.prisma.video.create({
         data: {
           url: parsedUrl,

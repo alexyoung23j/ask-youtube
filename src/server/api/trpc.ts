@@ -140,8 +140,6 @@ const enforceUserUploadLimit = t.middleware(async ({ ctx, next }) => {
 
   const numVideosUploaded = user?.numUploadedVideos;
 
-  console.log({ stripeCustomer, stripeSubscription, numVideosUploaded });
-
   if (
     (!stripeCustomer || stripeSubscription?.status !== "active") &&
     numVideosUploaded > 0
