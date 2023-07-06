@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
+  protectedProcedureWithUploadLimit,
   publicProcedure,
 } from "~/server/api/trpc";
 import ytdl from "ytdl-core";
@@ -10,7 +11,7 @@ import { parseYouTubeURL } from "~/utils/helpers";
 import { TRPCError } from "@trpc/server";
 
 export const transcriptionRouter = createTRPCRouter({
-  startTranscriptionJob: protectedProcedure
+  startTranscriptionJob: protectedProcedureWithUploadLimit
     .input(z.object({ url: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const { url } = input;
@@ -52,10 +53,28 @@ export const transcriptionRouter = createTRPCRouter({
             },
           });
         }
+
+        await ctx.prisma.user.update({
+          where: {
+            id: ctx.session?.user?.id,
+          },
+          data: {
+            numUploadedVideos: {
+              increment: 1,
+            },
+          },
+        });
         return existingVideo;
       }
 
       const videoInfo = await ytdl.getInfo(url);
+
+      if (parseInt(videoInfo?.videoDetails?.lengthSeconds) > 7200) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Video is too long",
+        });
+      }
 
       const newVideo = await ctx.prisma.video.create({
         data: {
@@ -71,6 +90,17 @@ export const transcriptionRouter = createTRPCRouter({
           data: {
             userId: ctx.session?.user?.id,
             videoUrl: newVideo.url,
+          },
+        });
+        // Update user count
+        await ctx.prisma.user.update({
+          where: {
+            id: ctx.session?.user?.id,
+          },
+          data: {
+            numUploadedVideos: {
+              increment: 1,
+            },
           },
         });
         void axios.post(process.env.CLOUD_FUNCTION_URL as string, {
