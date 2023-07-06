@@ -53,7 +53,7 @@ const HistoryContainer = ({
           className={styles.TextUnderline}
           onClick={onTitleClick}
         >
-          {title && title.length > 80 ? `${title.substring(0, 77)}...` : title}
+          {title && title.length > 70 ? `${title.substring(0, 67)}...` : title}
         </YText>
       </div>
       <div className={styles.RightContent}>

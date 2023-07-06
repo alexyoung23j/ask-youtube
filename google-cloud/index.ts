@@ -175,7 +175,6 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     const client = await pool.connect();
     await client.query(query, values);
     client.release();
-    console.log("Video record inserted successfully");
 
     deleteFile(outputFilePath);
   } catch (e) {
