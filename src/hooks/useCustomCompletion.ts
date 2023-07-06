@@ -37,7 +37,7 @@ const useCustomCompletion = ({
 
       if (startInd !== -1 && parsedCompletion.length > startInd + 17) {
         if (endInd) {
-          const answer = parsedCompletion.slice(startInd + 11, endInd);
+          const answer = parsedCompletion.slice(startInd + 11, endInd - 1);
           setAnswerText(answer);
         } else {
           const answer = parsedCompletion.slice(
@@ -50,7 +50,7 @@ const useCustomCompletion = ({
 
       if (parsedCompletion.endsWith("}")) {
         if (onMessageEnd) {
-          onMessageEnd(parsedCompletion);
+          onMessageEnd(completion);
         }
         setCompletedAnswerStream(true);
       }

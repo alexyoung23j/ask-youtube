@@ -72,7 +72,7 @@ const buildDocumentsForPrompt = ({
     if (correspondingTranscript) {
       // Extract the specified sentence and its neighbors
       const sentences = correspondingTranscript.sentences;
-      const startIdx = Math.max(0, sentenceIndex - 2);
+      const startIdx = Math.max(0, sentenceIndex - 3);
       const endIdx = Math.min(sentences.length, sentenceIndex + 4);
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
@@ -218,19 +218,19 @@ export default async function handler(
     });
 
   // Use this previous history with the new question to formulate a standalone question
-  const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. 
+  const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from the video transcript its provided. 
         If the AI does not know the answer to a question, it truthfully says it does not know.           
         Current conversation:
         {history}
         
-        In addition, use the following pieces of context from the video, along with your general knowledge of the subject as an extremely intelligent,
-        unbiased, and well informed person, to answer the users question if appropriate. 
+        Use the following transcript sections from the video, along with your general knowledge of the subject as an extremely intelligent,
+        unbiased, and well informed person, to answer the users question. If the transcript sections are not enough to answer the question,
+        just answer correctly with your general knowledge of the subject.
         ----------------
         {context}
          
         All inputs should be related to the transcripts or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
-        Do not answer generically- you can assume that the human is asking a question that is related to the context provided or the chat history. If the question 
-        is unrelated or unanswerable given the context or history, indicate that and then answer as a helpful, knowledgeable general assistant as best you can.
+        Do not answer generically- you can assume that the human is asking a question that is related to the transcripts provided or the chat history.
 
         {format_instructions}
         Be talkative, verbose, and specific! Offer more additional context than was asked for.
@@ -274,7 +274,7 @@ export default async function handler(
       chatHistory: new ChatMessageHistory(pastMessages),
       inputKey: "history",
     }),
-    verbose: true, // TOGGLE ON FOR PROMPT REVIEW
+    // verbose: true, // TOGGLE ON FOR PROMPT REVIEW
     prompt: chatPrompt,
   });
 

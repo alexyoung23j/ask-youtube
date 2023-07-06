@@ -6,6 +6,8 @@ import { removeOverlappingTimestamps } from "~/utils/helpers";
 import useCustomCompletion from "./useCustomCompletion";
 import { api } from "~/utils/api";
 import { v4 as uuidv4 } from "uuid";
+import { StructuredOutputParser } from "langchain/output_parsers";
+import { z } from "zod";
 
 // Hook for handling all chat functionality
 const useYoutubeChat = ({ id }: { id: string }) => {
@@ -45,15 +47,29 @@ const useYoutubeChat = ({ id }: { id: string }) => {
       // Optimistic UI update
       let parsedText = {
         answer:
-          "Something went wrong and I was unable to answer you! Please try again.",
+          "Something went wrong and I was unable to answer you! Please try again or refresh.",
         usedTimestamps: [] as number[],
       };
+
+      const parser = StructuredOutputParser.fromZodSchema(
+        z.object({
+          answer: z.string().describe("answer to the user's question"),
+          usedTimestamps: z
+            .array(z.number())
+            .describe(
+              "the timestamps of the documents actually used to answer the user's question. The timestamps are provided in the context."
+            ),
+        })
+      );
+
       try {
-        parsedText = JSON.parse(text) as {
-          answer: string;
-          usedTimestamps: number[];
-        };
+        // parsedText = JSON.parse(text) as {
+        //   answer: string;
+        //   usedTimestamps: number[];
+        // };
+        parsedText = await parser.parse(text);
       } catch (e) {
+        console.log({ text });
         console.log(e);
       }
 
