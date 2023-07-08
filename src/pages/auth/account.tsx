@@ -35,7 +35,7 @@ const PricingWidget = ({ hasSubscription }: { hasSubscription: boolean }) => {
               <YText className={styles.PricingUnits}>per month</YText>
             </div>
             <YButton
-              label={hasSubscription ? "Update Subscription" : "Subscribe"}
+              label={hasSubscription ? "Manage Subscription" : "Subscribe"}
               className={styles.SubscribeButton}
               onClick={onUpgradeClick}
             />

@@ -16,9 +16,14 @@ const useYoutubeChat = ({ id }: { id: string }) => {
   const [streamingMessageId, setStreamingMessageId] = useState<string>("");
 
   const { data: chatHistory, refetch: refetchChatHistory } =
-    api.chat.getChatHistory.useQuery({
-      chatHistoryId: id,
-    });
+    api.chat.getChatHistory.useQuery(
+      {
+        chatHistoryId: id,
+      },
+      {
+        refetchOnWindowFocus: false,
+      }
+    );
   const createUserMessage = api.chat.createUserMessage.useMutation();
   const createAIMessage = api.chat.createAIMessage.useMutation();
   const [messages, setMessages] = useState<
@@ -63,10 +68,6 @@ const useYoutubeChat = ({ id }: { id: string }) => {
       );
 
       try {
-        // parsedText = JSON.parse(text) as {
-        //   answer: string;
-        //   usedTimestamps: number[];
-        // };
         parsedText = await parser.parse(text);
       } catch (e) {
         console.log({ text });

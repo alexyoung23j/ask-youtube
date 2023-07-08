@@ -36,6 +36,7 @@ import { ChatMessage } from "~/components/ChatMessage";
 import { VideoTitle } from "~/components/VideoTitle";
 import YButton from "~/components/YButton";
 import YSpinner from "~/components/YSpinner";
+import { useMediaQuery } from "react-responsive";
 
 const ChatPage: NextPage = () => {
   const router = useRouter();
@@ -58,7 +59,6 @@ const ChatPage: NextPage = () => {
 
   const {
     messages,
-    chatHistory,
     userInput,
     setUserInput,
     generateResponse,
@@ -68,6 +68,8 @@ const ChatPage: NextPage = () => {
   } = useYoutubeChat({ id: id as string });
 
   useEffect(scrollToBottom, [messages, answerText]);
+
+  const isMobileScreen = useMediaQuery({ query: "(max-width: 800px)" });
 
   if (!id) {
     return (
@@ -177,9 +179,7 @@ const ChatPage: NextPage = () => {
           }}
         >
           <YSpinner size="large" color="#a6a6a6" />
-          <YText fontType="h3">
-            Video transcription not yet complete. Try again soon.
-          </YText>
+          <YText fontType="h3">Loading.. Try again soon.</YText>
         </div>
       </PageLayout>
     );
@@ -216,34 +216,40 @@ const ChatPage: NextPage = () => {
       limitWidth={false}
       logo={false}
       logoReplacementContent={
-        <VideoTitle
-          title={transcriptionCompleted.video.title as string}
-          url={transcriptionCompleted.video.url}
-        />
+        !isMobileScreen ? (
+          <VideoTitle
+            title={transcriptionCompleted.video.title as string}
+            url={transcriptionCompleted.video.url}
+          />
+        ) : (
+          <></>
+        )
       }
       rightContent={
         <div className={styles.TopNavBar}>
-          <YButton
-            label="Upload"
-            onClick={() => {
-              router.push("/videos?addNew=true");
-            }}
-          >
-            <div style={{ display: "flex", gap: "4px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  margin: "4px",
-                }}
-              >
-                <UploadIcon />
+          {!isMobileScreen && (
+            <YButton
+              label="Upload"
+              onClick={() => {
+                router.push("/videos?addNew=true");
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px" }}>
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    margin: "4px",
+                  }}
+                >
+                  <UploadIcon />
+                </div>
+                <YText fontColor="white" fontType="h3" wrap="nowrap">
+                  New Video
+                </YText>
               </div>
-              <YText fontColor="white" fontType="h3" wrap="nowrap">
-                New Video
-              </YText>
-            </div>
-          </YButton>
+            </YButton>
+          )}
           <YText
             fontType="h3"
             className={styles.Text}
@@ -251,7 +257,7 @@ const ChatPage: NextPage = () => {
               void router.push("/videos");
             }}
           >
-            Back to Videos →
+            {isMobileScreen ? "Back →" : "Back to Videos →"}
           </YText>
         </div>
       }
@@ -264,13 +270,15 @@ const ChatPage: NextPage = () => {
             playerRef={playerRef}
             videoId={videoId as string}
           />
-          <TranscriptViewer
-            transcript={
-              transcriptionCompleted.video
-                .transcription as unknown as Array<ChunkGroup>
-            }
-            timestamp={playerTimestamp}
-          />
+          {!isMobileScreen && (
+            <TranscriptViewer
+              transcript={
+                transcriptionCompleted.video
+                  .transcription as unknown as Array<ChunkGroup>
+              }
+              timestamp={playerTimestamp}
+            />
+          )}
         </div>
         <div className={styles.ChatSection}>
           <div className={styles.Messages}>

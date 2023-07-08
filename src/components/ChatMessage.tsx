@@ -3,6 +3,7 @@ import { Timestamp } from "./Timestamp";
 import YLoading from "./YLoading";
 import YText from "./YText";
 import { AIAvatar, UserAvatar } from "./icons";
+import { useMediaQuery } from "react-responsive";
 
 export const ChatMessage = ({
   content,
@@ -19,6 +20,8 @@ export const ChatMessage = ({
   onTimestampClick: (timestamp: number) => void;
   isLoading: boolean;
 }) => {
+  const isMobileScreen = useMediaQuery({ query: "(max-width: 800px)" });
+
   return (
     <div
       style={{
@@ -48,13 +51,16 @@ export const ChatMessage = ({
               <YLoading size="small" />
             </div>
           ) : (
-            <YText fontType="h3" className={styles.MessageText}>
+            <YText
+              fontType={isMobileScreen ? "h4" : "h3"}
+              className={styles.MessageText}
+            >
               {content}
             </YText>
           )}
           {sender === "AI" && timestamps.length > 0 && (
             <div className={styles.TimestampContainer}>
-              {timestamps.map((timestamp) => {
+              {timestamps.slice(0, 3).map((timestamp) => {
                 return (
                   <div key={timestamp}>
                     <Timestamp

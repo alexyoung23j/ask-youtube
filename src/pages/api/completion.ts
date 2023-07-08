@@ -196,7 +196,7 @@ export default async function handler(
   );
 
   const relevantDocuments: Array<[Document<DocumentMetadata>, number]> =
-    (await vectorStore.similaritySearchWithScore(inputText as string, 3, {
+    (await vectorStore.similaritySearchWithScore(inputText as string, 5, {
       url: url as string,
     })) as Array<[Document<DocumentMetadata>, number]>;
   console.log("finished similarity search", new Date());
@@ -218,19 +218,20 @@ export default async function handler(
     });
 
   // Use this previous history with the new question to formulate a standalone question
-  const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from the video transcript its provided. 
+  const PROMPT = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides
+        lots of specific details from the video transcript its provided. 
         If the AI does not know the answer to a question, it truthfully says it does not know.           
         Current conversation:
         {history}
         
         Use the following transcript sections from the video, along with your general knowledge of the subject as an extremely intelligent,
         unbiased, and well informed person, to answer the users question. If the transcript sections are not enough to answer the question,
-        just answer correctly with your general knowledge of the subject.
+        answer with your general knowledge of the subject.
         ----------------
         {context}
          
         All inputs should be related to the transcripts or the previous conversation. Answer the question in a way that makes sense in the context of the conversation.
-        Do not answer generically- you can assume that the human is asking a question that is related to the transcripts provided or the chat history.
+        Do not answer generically- you can assume that the human is asking a question that is related to the transcripts provided or the chat history. 
 
         {format_instructions}
         Be talkative, verbose, and specific! Offer more additional context than was asked for.
