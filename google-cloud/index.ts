@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { Request, Response } from "express";
@@ -15,6 +16,12 @@ import { PineconeClient } from "@pinecone-database/pinecone";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import pathToFfmpeg from "ffmpeg-static";
+import { Storage } from "@google-cloud/storage";
+import { Writable } from "stream";
+import { v4 as uuidv4 } from "uuid";
+
+const storage = new Storage();
+
 dotenv.config();
 
 const pool = new Pool({
@@ -75,30 +82,30 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     res.status(500).send("Internal Server Error");
   }
 
-  const outputFilePath = path.join(os.tmpdir(), "output.mp3");
+  const bucketName = "ask-youtube-dev-storage";
+  const fileName = `output-${uuidv4()}.mp3`;
+  const file = storage.bucket(bucketName).file(fileName);
+
   ffmpeg.setFfmpegPath(pathToFfmpeg as string); // Set FFmpeg path
 
   // CONVERT TO MP3
   try {
     const converter = ffmpeg(stream).format("mp3");
-    const fileStream = fs.createWriteStream(outputFilePath);
-    converter.pipe(fileStream);
+    const writeStream = file.createWriteStream();
+    converter.pipe(writeStream as Writable);
 
     // Return a new Promise that resolves when the file is done being written
     await new Promise<void>((resolve, reject) => {
-      fileStream.on("finish", () => {
-        console.log(`Video saved to ${outputFilePath}`, new Date());
+      writeStream.on("finish", () => {
+        console.log(`Video saved to ${bucketName}/${fileName}`, new Date());
         resolve();
       });
-      fileStream.on("error", reject);
+      writeStream.on("error", reject);
     });
-
-    const audio = fs.readFileSync(outputFilePath);
 
     // Set the source
     const source = {
-      buffer: audio,
-      mimetype: mimetype,
+      url: `https://storage.googleapis.com/${bucketName}/${fileName}`,
     };
 
     console.log("starting transcription of ", videoUrl, new Date());
@@ -148,6 +155,8 @@ export const transcriptionJob = async (req: Request, res: Response) => {
       }
     }
 
+    console.log("starting document upload", new Date());
+
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
     await PineconeStore.fromDocuments(documents, new OpenAIEmbeddings(), {
       pineconeIndex,
@@ -172,14 +181,19 @@ export const transcriptionJob = async (req: Request, res: Response) => {
       new Date(),
     ];
 
+    console.log("finished document upload", new Date());
+    console.log("starting database write", new Date());
+
     const client = await pool.connect();
     await client.query(query, values);
     client.release();
 
-    deleteFile(outputFilePath);
+    console.log("finished database write", new Date());
+
+    await file.delete();
   } catch (e) {
     console.log(e);
-    deleteFile(outputFilePath);
+    await file.delete();
     res.status(500).send("Internal Server Error");
   }
 
