@@ -4,20 +4,18 @@
 import type { Request, Response } from "express";
 import ytdl from "ytdl-core";
 import fs from "fs";
-import os from "os";
-import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 import type { PrerecordedTranscriptionResponse } from "@deepgram/sdk/dist/types";
 import { Deepgram } from "@deepgram/sdk";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import pathToFfmpeg from "ffmpeg-static";
 import { Storage } from "@google-cloud/storage";
-import { Writable } from "stream";
+import type { Writable } from "stream";
 import { v4 as uuidv4 } from "uuid";
 
 const storage = new Storage();
@@ -31,27 +29,7 @@ const pool = new Pool({
   },
 });
 
-const pinecone = new PineconeClient();
-async function initClient() {
-  await pinecone.init({
-    apiKey: process.env.PINECONE_API_KEY as string,
-    environment: process.env.PINECONE_ENVIRONMENT as string,
-  });
-}
-
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY as string);
-
-const mimetype = "audio/mp3";
-
-function deleteFile(filePath: string): void {
-  fs.unlink(filePath, (err: any) => {
-    if (err) {
-      console.error(`Error while deleting file ${filePath}:`, err);
-    } else {
-      console.log(`Successfully deleted file ${filePath}`);
-    }
-  });
-}
 
 export const transcriptionJob = async (req: Request, res: Response) => {
   console.log("started job", new Date());
@@ -62,8 +40,6 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   }
 
   const videoUrl = url as string;
-
-  await initClient();
 
   // PARSE DATA
   let stream;
@@ -157,9 +133,15 @@ export const transcriptionJob = async (req: Request, res: Response) => {
 
     console.log("starting document upload", new Date());
 
-    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
-    await PineconeStore.fromDocuments(documents, new OpenAIEmbeddings(), {
-      pineconeIndex,
+    const supabaseClient = createSupabaseClient(
+      process.env.EMBEDDING_DB_URL as string,
+      process.env.EMBEDDING_DB_KEY as string
+    );
+
+    await SupabaseVectorStore.fromDocuments(documents, new OpenAIEmbeddings(), {
+      client: supabaseClient,
+      tableName: "documents",
+      queryName: "match_documents",
     });
 
     // Save to DB TODO: correct values

@@ -4,8 +4,8 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { CallbackManager } from "langchain/callbacks";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { getPineconeClient } from "~/server/db";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 import { BufferMemory, ChatMessageHistory } from "langchain/memory";
 import {
   HumanChatMessage,
@@ -185,14 +185,20 @@ export default async function handler(
   }>;
 
   // Load in documents
-  console.log("init pinecone", new Date());
-  const pinecone = await getPineconeClient();
-  console.log("pinecone initted", new Date());
-  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
   console.log("starting vector search, ", new Date());
-  const vectorStore = await PineconeStore.fromExistingIndex(
+
+  const supabaseClient = createSupabaseClient(
+    process.env.EMBEDDING_DB_URL as string,
+    process.env.EMBEDDING_DB_KEY as string
+  );
+
+  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
     new OpenAIEmbeddings(),
-    { pineconeIndex }
+    {
+      client: supabaseClient,
+      tableName: "documents",
+      queryName: "match_documents",
+    }
   );
 
   const relevantDocuments: Array<[Document<DocumentMetadata>, number]> =
