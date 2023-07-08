@@ -33,6 +33,8 @@ const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY as string);
 
 export const transcriptionJob = async (req: Request, res: Response) => {
   console.log("started job", new Date());
+  const startTime = process.hrtime();
+
   const { url } = req.body;
   if (!url) {
     console.log("Request body does not contain data field");
@@ -59,16 +61,13 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   }
 
   const bucketName = "ask-youtube-dev-storage";
-  const fileName = `output-${uuidv4()}.mp3`;
+  const fileName = `output-${uuidv4()}`;
   const file = storage.bucket(bucketName).file(fileName);
-
-  ffmpeg.setFfmpegPath(pathToFfmpeg as string); // Set FFmpeg path
 
   // CONVERT TO MP3
   try {
-    const converter = ffmpeg(stream).format("mp3");
     const writeStream = file.createWriteStream();
-    converter.pipe(writeStream as Writable);
+    stream.pipe(writeStream as Writable);
 
     // Return a new Promise that resolves when the file is done being written
     await new Promise<void>((resolve, reject) => {
@@ -178,6 +177,13 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     await file.delete();
     res.status(500).send("Internal Server Error");
   }
+
+  const end = process.hrtime(startTime);
+  const durationInSeconds = end[0] + end[1] / 1e9;
+
+  console.log(
+    `Finished transcription job in ${durationInSeconds} seconds for ${videoInfo.videoDetails.lengthSeconds} seconds of video`
+  );
 
   res.status(200).send("OK");
 };
