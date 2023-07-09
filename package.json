@@ -43,7 +43,7 @@
     "google-auth-library": "^8.9.0",
     "langchain": "^0.0.92",
     "micro": "^10.0.1",
-    "next": "^13.4.2",
+    "next": "^13.4.8",
     "next-auth": "^4.22.1",
     "nodemon": "^2.0.22",
     "pg": "^8.11.1",
