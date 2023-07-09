@@ -1,20 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { Request, Response } from "express";
 import ytdl from "ytdl-core";
 import fs from "fs";
-import os from "os";
-import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 import type { PrerecordedTranscriptionResponse } from "@deepgram/sdk/dist/types";
 import { Deepgram } from "@deepgram/sdk";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import pathToFfmpeg from "ffmpeg-static";
+import { Storage } from "@google-cloud/storage";
+import type { Writable } from "stream";
+import { v4 as uuidv4 } from "uuid";
+
+const storage = new Storage();
+
 dotenv.config();
 
 const pool = new Pool({
@@ -24,30 +29,12 @@ const pool = new Pool({
   },
 });
 
-const pinecone = new PineconeClient();
-async function initClient() {
-  await pinecone.init({
-    apiKey: process.env.PINECONE_API_KEY as string,
-    environment: process.env.PINECONE_ENVIRONMENT as string,
-  });
-}
-
 const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY as string);
-
-const mimetype = "audio/mp3";
-
-function deleteFile(filePath: string): void {
-  fs.unlink(filePath, (err: any) => {
-    if (err) {
-      console.error(`Error while deleting file ${filePath}:`, err);
-    } else {
-      console.log(`Successfully deleted file ${filePath}`);
-    }
-  });
-}
 
 export const transcriptionJob = async (req: Request, res: Response) => {
   console.log("started job", new Date());
+  const startTime = process.hrtime();
+
   const { url } = req.body;
   if (!url) {
     console.log("Request body does not contain data field");
@@ -55,8 +42,6 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   }
 
   const videoUrl = url as string;
-
-  await initClient();
 
   // PARSE DATA
   let stream;
@@ -75,30 +60,27 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     res.status(500).send("Internal Server Error");
   }
 
-  const outputFilePath = path.join(os.tmpdir(), "output.mp3");
-  ffmpeg.setFfmpegPath(pathToFfmpeg as string); // Set FFmpeg path
+  const bucketName = "ask-youtube-dev-storage";
+  const fileName = `output-${uuidv4()}`;
+  const file = storage.bucket(bucketName).file(fileName);
 
   // CONVERT TO MP3
   try {
-    const converter = ffmpeg(stream).format("mp3");
-    const fileStream = fs.createWriteStream(outputFilePath);
-    converter.pipe(fileStream);
+    const writeStream = file.createWriteStream();
+    stream.pipe(writeStream as Writable);
 
     // Return a new Promise that resolves when the file is done being written
     await new Promise<void>((resolve, reject) => {
-      fileStream.on("finish", () => {
-        console.log(`Video saved to ${outputFilePath}`, new Date());
+      writeStream.on("finish", () => {
+        console.log(`Video saved to ${bucketName}/${fileName}`, new Date());
         resolve();
       });
-      fileStream.on("error", reject);
+      writeStream.on("error", reject);
     });
-
-    const audio = fs.readFileSync(outputFilePath);
 
     // Set the source
     const source = {
-      buffer: audio,
-      mimetype: mimetype,
+      url: `https://storage.googleapis.com/${bucketName}/${fileName}`,
     };
 
     console.log("starting transcription of ", videoUrl, new Date());
@@ -148,9 +130,17 @@ export const transcriptionJob = async (req: Request, res: Response) => {
       }
     }
 
-    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
-    await PineconeStore.fromDocuments(documents, new OpenAIEmbeddings(), {
-      pineconeIndex,
+    console.log("starting document upload", new Date());
+
+    const supabaseClient = createSupabaseClient(
+      process.env.EMBEDDING_DB_URL as string,
+      process.env.EMBEDDING_DB_KEY as string
+    );
+
+    await SupabaseVectorStore.fromDocuments(documents, new OpenAIEmbeddings(), {
+      client: supabaseClient,
+      tableName: "documents",
+      queryName: "match_documents",
     });
 
     // Save to DB TODO: correct values
@@ -172,16 +162,28 @@ export const transcriptionJob = async (req: Request, res: Response) => {
       new Date(),
     ];
 
+    console.log("finished document upload", new Date());
+    console.log("starting database write", new Date());
+
     const client = await pool.connect();
     await client.query(query, values);
     client.release();
 
-    deleteFile(outputFilePath);
+    console.log("finished database write", new Date());
+
+    await file.delete();
   } catch (e) {
     console.log(e);
-    deleteFile(outputFilePath);
+    await file.delete();
     res.status(500).send("Internal Server Error");
   }
+
+  const end = process.hrtime(startTime);
+  const durationInSeconds = end[0] + end[1] / 1e9;
+
+  console.log(
+    `Finished transcription job in ${durationInSeconds} seconds for ${videoInfo.videoDetails.lengthSeconds} seconds of video`
+  );
 
   res.status(200).send("OK");
 };

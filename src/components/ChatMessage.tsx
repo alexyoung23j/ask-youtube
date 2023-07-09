@@ -60,7 +60,7 @@ export const ChatMessage = ({
           )}
           {sender === "AI" && timestamps.length > 0 && (
             <div className={styles.TimestampContainer}>
-              {timestamps.slice(0, 3).map((timestamp) => {
+              {timestamps.map((timestamp) => {
                 return (
                   <div key={timestamp}>
                     <Timestamp

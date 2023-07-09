@@ -45,6 +45,27 @@ const VideosPage: NextPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    let intervalId: NodeJS.Timer;
+    const allTranscriptionsCompleted = videos?.every(
+      (video) => video.transcription !== null
+    );
+    if (!allTranscriptionsCompleted) {
+      console.log("refetching videos...");
+      intervalId = setInterval(() => {
+        refetch(); // assuming `refetch` is defined and updates `videos` state.
+      }, 2000);
+    }
+
+    // Cleanup function that will be called when your component unmounts
+    // or when `videos` state changes.
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [videos]);
+
+  useEffect(() => {
     if (url.length < 1) {
       setUploadUrlError("");
     }
@@ -62,7 +83,7 @@ const VideosPage: NextPage = () => {
 
       setTimeout(() => {
         refetch();
-      }, 10000);
+      }, 5000);
     } catch (e: any) {
       console.log(e.message);
       setUploadUrlError(e.message as string);

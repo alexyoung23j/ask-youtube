@@ -257,7 +257,7 @@ const ChatPage: NextPage = () => {
               void router.push("/videos");
             }}
           >
-            {isMobileScreen ? "Back →" : "Back to Videos →"}
+            {isMobileScreen ? "Back to Videos →" : "Back to Videos →"}
           </YText>
         </div>
       }

@@ -30,6 +30,8 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string(),
     OPENAI_ORGANIZATION_ID: z.string(),
     CLOUD_FUNCTION_URL: z.string(),
+    EMBEDDING_DB_URL: z.string(),
+    EMBEDDING_DB_KEY: z.string(),
   },
 
   /**
@@ -59,6 +61,8 @@ export const env = createEnv({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_ORGANIZATION_ID: process.env.OPENAI_ORGANIZATION_ID,
     CLOUD_FUNCTION_URL: process.env.CLOUD_FUNCTION_URL,
+    EMBEDDING_DB_URL: process.env.EMBEDDING_DB_URL,
+    EMBEDDING_DB_KEY: process.env.EMBEDDING_DB_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

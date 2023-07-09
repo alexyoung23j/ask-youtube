@@ -9,7 +9,9 @@
     "@deepgram/sdk": "^2.1.1",
     "@google-cloud/functions-framework": "^3.2.0",
     "@google-cloud/pubsub": "^3.7.1",
+    "@google-cloud/storage": "^6.11.0",
     "@pinecone-database/pinecone": "^0.1.6",
+    "@supabase/supabase-js": "^2.26.0",
     "@types/amqplib": "^0.10.1",
     "@types/pg": "^8.10.2",
     "amqplib": "^0.10.3",
@@ -21,6 +23,7 @@
     "nodemon": "^2.0.22",
     "pg": "^8.11.0",
     "superjson": "1.12.2",
+    "uuid": "^9.0.0",
     "ytdl-core": "^4.11.4"
   },
   "devDependencies": {
