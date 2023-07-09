@@ -67,7 +67,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   // CONVERT TO MP3
   try {
     const writeStream = file.createWriteStream();
-    stream.pipe(writeStream as Writable);
+    stream?.pipe(writeStream as Writable);
 
     // Return a new Promise that resolves when the file is done being written
     await new Promise<void>((resolve, reject) => {
