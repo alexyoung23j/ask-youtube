@@ -10,7 +10,7 @@
     "deploy-functions-prod": "cd google-cloud && yarn && tsc && cp package*.json build/ && gcloud functions deploy transcriptionJobProd --runtime nodejs18 --trigger-http --source build/ --entry-point transcriptionJob",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start-prod": "next start",
+    "start-prod": "yarn --cwd prisma prisma db push && next start",
     "reset-db": "yarn --cwd prisma prisma migrate reset --force && prisma migrate deploy",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe-webhook --latest"
   },
