@@ -8,7 +8,7 @@ const SignInPage: NextPage = () => {
   return (
     <div>
       <button onClick={() => void signIn("google", { callbackUrl: "/chats" })}>
-        {sessionData ? "Sign out" : "Sign in"}
+        {sessionData ? "Sign Out" : "Sign in"}
       </button>
     </div>
   );
