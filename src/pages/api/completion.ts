@@ -310,5 +310,5 @@ export default async function handler(
     });
 
   // Streams to the client
-  streamToResponse(stream, res);
+  return streamToResponse(stream, res);
 }
