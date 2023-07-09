@@ -3,8 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { Request, Response } from "express";
 import ytdl from "ytdl-core";
-import fs from "fs";
-import ffmpeg from "fluent-ffmpeg";
 import type { PrerecordedTranscriptionResponse } from "@deepgram/sdk/dist/types";
 import { Deepgram } from "@deepgram/sdk";
 import { Document } from "langchain/document";
@@ -13,7 +11,6 @@ import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Pool } from "pg";
 import dotenv from "dotenv";
-import pathToFfmpeg from "ffmpeg-static";
 import { Storage } from "@google-cloud/storage";
 import type { Writable } from "stream";
 import { v4 as uuidv4 } from "uuid";
