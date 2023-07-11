@@ -1,4 +1,4 @@
-import { prisma } from "~/server/db";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
@@ -31,6 +31,8 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "~/server/auth";
 import { z } from "zod";
+
+export const runtime = "edge";
 
 interface DocumentMetadata {
   paragraphIndex: number;
@@ -100,89 +102,22 @@ interface Data {
 }
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
+export default async function POST(req: Request) {
   console.log("route start", new Date());
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const {
     prompt: inputText,
     url,
-    chatId: passedChatId,
-  } = JSON.parse(req.body as string);
-
-  const session = await getServerSession(req, res, authOptions);
-
-  const video = await prisma.video.findFirst({
-    where: {
-      url: url as string,
-    },
-  });
-
-  if (!video) {
-    // return a 500 on res
-    return res.status(500).end("Video not found or transcribed");
-  }
-
-  const user = await prisma.user.findFirst({
-    where: {
-      id: session?.user?.id,
-    },
-  });
-
-  if (!user) {
-    return res.status(500).end("User not found");
-  }
-
-  let chatHistory: ChatHistory | null;
-
-  if (passedChatId) {
-    chatHistory = await prisma.chatHistory.findFirst({
-      where: {
-        id: passedChatId as string,
-      },
-      include: {
-        messages: {
-          orderBy: {
-            createdAt: "asc",
-          },
-        },
-      },
-    });
-    if (!chatHistory) {
-      return res.status(500).end("Chat history id not found");
-    }
-  } else {
-    // TODO: this is only there for demo
-    chatHistory = await prisma.chatHistory.create({
-      data: {
-        videoUrl: video.url,
-        userId: user.id,
-      },
-    });
-  }
-
-  const chatId = chatHistory?.id;
-
-  if (!chatHistory) {
-    return res.status(500).end("Chat history id not found");
-  }
-
-  const messages = await prisma.message.findMany({
-    where: {
-      chatId: chatId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-
-  console.log("route mid", new Date());
-
-  const transcription = video?.transcription as Array<{
-    sentences: Array<{ text: string }>;
-  }>;
+    transcription,
+    messages,
+  }: {
+    prompt: string;
+    url: string;
+    transcription: Array<{
+      sentences: Array<{ text: string }>;
+    }>;
+    messages: Array<{ sender: string; content: string }>;
+  } = await req.json();
 
   // Load in documents
   console.log("starting vector search, ", new Date());
@@ -202,8 +137,8 @@ export default async function handler(
   );
 
   const relevantDocuments: Array<[Document<DocumentMetadata>, number]> =
-    (await vectorStore.similaritySearchWithScore(inputText as string, 5, {
-      url: url as string,
+    (await vectorStore.similaritySearchWithScore(inputText, 5, {
+      url: url,
     })) as Array<[Document<DocumentMetadata>, number]>;
   console.log("finished similarity search", new Date());
 
@@ -243,11 +178,14 @@ export default async function handler(
         Be talkative, verbose, and specific! Offer more additional context than was asked for.
 
         Human Question: {input}
-        AI Answer, formatted as specified: `;
+        AI Answer, ALWAYS formatted as JSON as describe above: `;
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(PROMPT),
     HumanMessagePromptTemplate.fromTemplate("{input}"),
+    HumanMessagePromptTemplate.fromTemplate(
+      "NEVER EVER EVER FORGET TO FORMAT AS JSON!"
+    ),
   ]);
 
   const parser = StructuredOutputParser.fromZodSchema(
@@ -273,6 +211,7 @@ export default async function handler(
     modelName: "gpt-4",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
+    temperature: 0,
   });
 
   const chain = new ConversationChain({
@@ -291,7 +230,7 @@ export default async function handler(
     .call(
       {
         history: pastMessages,
-        input: inputText as string,
+        input: inputText,
         format_instructions: formatInstructions,
         context: parsedDocumentMap.map((doc) => doc.paragraphText).join("\n"),
       },
@@ -310,5 +249,5 @@ export default async function handler(
     });
 
   // Streams to the client
-  return streamToResponse(stream, res);
+  return new StreamingTextResponse(stream);
 }

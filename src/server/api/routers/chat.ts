@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { ChatHistory } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { z } from "zod";
@@ -45,6 +46,81 @@ export const chatRouter = createTRPCRouter({
 
     return chatHistories;
   }),
+  getChatHistoryForCompletion: protectedProcedure
+    .input(z.object({ url: z.string(), passedChatId: z.string().optional() }))
+    .query(async ({ input, ctx }) => {
+      const { url, passedChatId } = input;
+
+      const video = await ctx.prisma.video.findFirst({
+        where: {
+          url: url,
+        },
+      });
+
+      if (!video) {
+        // return a 500 on res
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Video not found or transcribed",
+        });
+      }
+
+      let chatHistory: ChatHistory | null;
+
+      if (passedChatId) {
+        chatHistory = await ctx.prisma.chatHistory.findFirst({
+          where: {
+            id: passedChatId,
+          },
+          include: {
+            messages: {
+              orderBy: {
+                createdAt: "asc",
+              },
+            },
+          },
+        });
+        if (!chatHistory) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No chat history found",
+          });
+        }
+      } else {
+        // TODO: this is only there for demo
+        chatHistory = await ctx.prisma.chatHistory.create({
+          data: {
+            videoUrl: video.url,
+            userId: ctx.session.user.id,
+          },
+        });
+      }
+
+      const chatId = chatHistory?.id;
+
+      if (!chatHistory) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No chat history found",
+        });
+      }
+
+      const messages = await ctx.prisma.message.findMany({
+        where: {
+          chatId: chatId,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      return {
+        messages,
+        transcription: video.transcription as Array<{
+          sentences: Array<{ text: string }>;
+        }>,
+      };
+    }),
   checkTranscriptionStatus: protectedProcedure
     .input(z.object({ chatHistoryId: z.string() }))
     .query(async ({ input, ctx }) => {
