@@ -178,11 +178,14 @@ export default async function POST(req: Request) {
         Be talkative, verbose, and specific! Offer more additional context than was asked for.
 
         Human Question: {input}
-        AI Answer, formatted as specified: `;
+        AI Answer, ALWAYS formatted as JSON as describe above: `;
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(PROMPT),
     HumanMessagePromptTemplate.fromTemplate("{input}"),
+    HumanMessagePromptTemplate.fromTemplate(
+      "NEVER EVER EVER FORGET TO FORMAT AS JSON!"
+    ),
   ]);
 
   const parser = StructuredOutputParser.fromZodSchema(
@@ -208,6 +211,7 @@ export default async function POST(req: Request) {
     modelName: "gpt-4",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
+    temperature: 0,
   });
 
   const chain = new ConversationChain({
