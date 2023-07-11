@@ -24,6 +24,7 @@ const useYoutubeChat = ({ id }: { id: string }) => {
         refetchOnWindowFocus: false,
       }
     );
+
   const createUserMessage = api.chat.createUserMessage.useMutation();
   const createAIMessage = api.chat.createAIMessage.useMutation();
   const [messages, setMessages] = useState<
@@ -47,6 +48,13 @@ const useYoutubeChat = ({ id }: { id: string }) => {
     body: {
       url: chatHistory?.video.url,
       chatId: id,
+      transcription: chatHistory?.video.transcription as Array<{
+        sentences: Array<{ text: string }>;
+      }>,
+      messages: chatHistory?.messages as Array<{
+        sender: string;
+        content: string;
+      }>,
     },
     onMessageEnd: async (text: string) => {
       // Optimistic UI update

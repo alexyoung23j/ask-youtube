@@ -213,42 +213,6 @@ const ChatListPage: NextPage = () => {
       </div>
     </PageLayout>
   );
-
-  return (
-    <div>
-      Chats!
-      <div>
-        <input
-          value={url}
-          onInput={(e) => {
-            setUrl(e.currentTarget.value);
-          }}
-          placeholder="Enter URL"
-        ></input>
-        <button onClick={createChat}>Transcribe</button>
-      </div>
-      <div style={{ marginTop: "20px" }}>
-        {chatHistories?.map((chat) => {
-          return (
-            <div
-              key={chat.id}
-              onClick={() => {
-                router.push(`/chat?id=${chat.id}`);
-              }}
-              style={{ cursor: "pointer", margin: "4px" }}
-            >
-              {chat.video.title}
-            </div>
-          );
-        })}
-      </div>
-      <button
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
-  );
 };
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
