@@ -41,51 +41,44 @@ interface DocumentMetadata {
   [key: string]: any;
 }
 
+type DocumentEntry = {
+  paragraphIndex: number;
+  paragraphText: string;
+  snippetStartTime: number;
+};
+
 const buildDocumentsForPrompt = ({
   transcript,
   documents,
 }: {
-  transcript: Array<{
-    sentences: Array<{ text: string }>;
-  }>;
+  transcript: Array<{ sentences: Array<{ text: string }> }>;
   documents: Array<[Document<DocumentMetadata>, number]>;
-}): Array<{
-  paragraphIndex: number;
-  paragraphText: string;
-  snippetStartTime: number;
-}> => {
-  // Initialize an empty array to store the result
-  const result: Array<{
-    paragraphIndex: number;
-    paragraphText: string;
-    snippetStartTime: number;
-  }> = [];
+}): DocumentEntry[] => {
+  const result: Map<string, DocumentEntry> = new Map();
 
-  // Go through each document
   documents.forEach(([document, _]) => {
-    // Access metadata fields assuming they exist (no type checking)
     const paragraphIndex = document.metadata.paragraphIndex;
     const startTime = document.metadata.start;
     const sentenceIndex = document.metadata.sentenceIndex;
 
-    // Find the corresponding transcript
     const correspondingTranscript = transcript[paragraphIndex];
 
     if (correspondingTranscript) {
-      // Extract the specified sentence and its neighbors
       const sentences = correspondingTranscript.sentences;
       const startIdx = Math.max(0, sentenceIndex - 3);
       const endIdx = Math.min(sentences.length, sentenceIndex + 4);
       const selectedSentences = sentences.slice(startIdx, endIdx);
 
-      // Concatenate selected sentences
-      let paragraphText = `\TRANSCRIPT TIMESTAMP: ${startTime} DOCUMENT: `;
+      let paragraphText = `TRANSCRIPT TIMESTAMP: ${startTime} DOCUMENT: `;
       selectedSentences.forEach((sentence, idx) => {
         paragraphText += `${sentence.text} `;
       });
 
-      // Push to the result array
-      result.push({
+      // Concatenate the paragraphIndex and snippetStartTime to form a unique key
+      const key = `${paragraphIndex}-${startTime}`;
+
+      // Update the map, ensuring uniqueness
+      result.set(key, {
         paragraphIndex: paragraphIndex,
         paragraphText: paragraphText.trim(),
         snippetStartTime: startTime,
@@ -93,17 +86,12 @@ const buildDocumentsForPrompt = ({
     }
   });
 
-  return result;
+  // Convert the Map values to an array
+  return Array.from(result.values());
 };
-
-interface Data {
-  name: string;
-  // Include additional properties as required by your application
-}
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export default async function POST(req: Request) {
-  console.log("route start", new Date());
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const {
     prompt: inputText,
@@ -140,6 +128,7 @@ export default async function POST(req: Request) {
     (await vectorStore.similaritySearchWithScore(inputText, 5, {
       url: url,
     })) as Array<[Document<DocumentMetadata>, number]>;
+
   console.log("finished similarity search", new Date());
 
   const parsedDocumentMap = buildDocumentsForPrompt({
@@ -178,7 +167,7 @@ export default async function POST(req: Request) {
         Be talkative, verbose, and specific! Offer more additional context than was asked for.
 
         Human Question: {input}
-        AI Answer, ALWAYS formatted as JSON as describe above: `;
+        AI Answer, formatted as JSON as describe above: `;
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(PROMPT),
@@ -198,7 +187,7 @@ export default async function POST(req: Request) {
       usedTimestamps: z
         .array(z.number())
         .describe(
-          "the timestamps of the transcripts actually used to answer the user's question. The timestamps are provided in the context."
+          "the timestamps of the transcripts used to answer the user's question. The timestamps are provided in the context. Timestamps need only be somewhat related to be included."
         ),
     })
   );
@@ -208,7 +197,7 @@ export default async function POST(req: Request) {
   const { stream, handlers } = LangChainStream();
 
   const model = new ChatOpenAI({
-    modelName: "gpt-4",
+    modelName: "gpt-3.5-turbo",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
     temperature: 0,
@@ -223,8 +212,6 @@ export default async function POST(req: Request) {
     // verbose: true, // TOGGLE ON FOR PROMPT REVIEW
     prompt: chatPrompt,
   });
-
-  console.log("route start call", new Date());
 
   chain
     .call(

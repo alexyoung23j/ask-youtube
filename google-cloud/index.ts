@@ -64,7 +64,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
   // CONVERT TO MP3
   try {
     const writeStream = file.createWriteStream();
-    stream?.pipe(writeStream as Writable);
+    stream?.pipe(writeStream);
 
     // Return a new Promise that resolves when the file is done being written
     await new Promise<void>((resolve, reject) => {
@@ -84,7 +84,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     const transcriptionResp: PrerecordedTranscriptionResponse =
       (await deepgram.transcription.preRecorded(source, {
         smart_format: true,
-        model: "nova",
+        model: "whisper",
         video: true,
         punctuate: true,
         times: true,

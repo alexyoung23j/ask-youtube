@@ -277,17 +277,25 @@ export const chatRouter = createTRPCRouter({
         30
       );
 
-      const responseMessage = await ctx.prisma.message.create({
-        data: {
-          content: parsedAnswer.answer,
-          sender: "AI",
-          videoTimestamps: timestamps,
-          chatId: chatHistory.id,
-          id: messageId,
-        },
-      });
+      try {
+        const responseMessage = await ctx.prisma.message.create({
+          data: {
+            content: parsedAnswer.answer,
+            sender: "AI",
+            videoTimestamps: timestamps,
+            chatId: chatHistory.id,
+            id: messageId,
+          },
+        });
 
-      return responseMessage;
+        return responseMessage;
+      } catch (e) {
+        console.log(e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to create message",
+        });
+      }
     }),
   deleteChat: protectedProcedure
     .input(z.object({ chatHistoryId: z.string() }))
