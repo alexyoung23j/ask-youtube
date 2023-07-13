@@ -164,7 +164,7 @@ export default async function POST(req: Request) {
         Do not answer generically- you can assume that the human is asking a question that is related to the transcripts provided or the chat history. 
 
         {format_instructions}
-        Be talkative, verbose, and specific! Offer more additional context than was asked for.
+        Be talkative, verbose, and specific! Offer more additional context than was asked for. 
 
         Human Question: {input}
         AI Answer, formatted as JSON as describe above: `;

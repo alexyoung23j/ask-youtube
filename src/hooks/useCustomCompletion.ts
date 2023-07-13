@@ -64,7 +64,7 @@ const useCustomCompletion = ({
         setCompletedAnswerStream(true);
       }
     } else if (jsonFormattingBroken) {
-      setAnswerText(completion);
+      setAnswerText(parsedCompletion);
     }
   }, [completion, onMessageEnd, completedAnswerStream]);
 

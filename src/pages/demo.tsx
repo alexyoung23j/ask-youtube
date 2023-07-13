@@ -44,11 +44,11 @@ const DemoQuestions = ({
           fontWeight="light"
           className={styles.QuestionText}
           onClick={() => {
-            setUserText("How does bitcoin work?");
+            setUserText("Explain why decentralization matters in Bitcoin.");
             setUsedDefaultQuestion(true);
           }}
         >
-          How does bitcoin work?
+          Explain why decentralization matters in Bitcoin.
         </YText>
         <YText
           fontType="h3"
@@ -70,7 +70,7 @@ const DemoQuestions = ({
             setUsedDefaultQuestion(true);
           }}
         >
-          What is proof of work?
+          What is proof of work and why is it needed?
         </YText>
       </div>
     </div>

@@ -4,6 +4,7 @@ import YLoading from "./YLoading";
 import YText from "./YText";
 import { AIAvatar, UserAvatar } from "./icons";
 import { useMediaQuery } from "react-responsive";
+import React, { useEffect } from "react";
 
 export const ChatMessage = ({
   content,
@@ -21,6 +22,11 @@ export const ChatMessage = ({
   isLoading: boolean;
 }) => {
   const isMobileScreen = useMediaQuery({ query: "(max-width: 800px)" });
+  const [contentArray, setContentArray] = React.useState<string[]>([]);
+
+  useEffect(() => {
+    setContentArray(content.split("\\n\\n"));
+  }, [content]);
 
   return (
     <div
@@ -55,7 +61,13 @@ export const ChatMessage = ({
               fontType={isMobileScreen ? "h4" : "h3"}
               className={styles.MessageText}
             >
-              {content}
+              {contentArray.map((part, index) => (
+                <React.Fragment key={index}>
+                  {index !== 0 && <br />}
+                  {part}
+                  <br />
+                </React.Fragment>
+              ))}
             </YText>
           )}
           {sender === "AI" && timestamps.length > 0 && (
