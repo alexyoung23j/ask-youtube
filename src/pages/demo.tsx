@@ -25,6 +25,7 @@ import { ChatMessage } from "~/components/ChatMessage";
 import { VideoTitle } from "~/components/VideoTitle";
 import YButton from "~/components/YButton";
 import YSpinner from "~/components/YSpinner";
+import { useMediaQuery } from "react-responsive";
 
 const DemoQuestions = ({
   setUserText,
@@ -39,28 +40,31 @@ const DemoQuestions = ({
     <div className={styles.DemoQuestions}>
       <YText fontType="h3">Chat with the video:</YText>
       <div style={{ display: "flex", gap: "8px", flexDirection: "column" }}>
-        <YText
-          fontType="h3"
-          fontWeight="light"
-          className={styles.QuestionText}
-          onClick={() => {
-            setUserText("Explain why decentralization matters in Bitcoin.");
-            setUsedDefaultQuestion(true);
-          }}
-        >
-          Explain why decentralization matters in Bitcoin.
-        </YText>
-        <YText
-          fontType="h3"
-          fontWeight="light"
-          className={styles.QuestionText}
-          onClick={() => {
-            setUserText("What are block rewards?");
-            setUsedDefaultQuestion(true);
-          }}
-        >
-          What are block rewards?
-        </YText>
+        <>
+          <YText
+            fontType="h3"
+            fontWeight="light"
+            className={styles.QuestionText}
+            onClick={() => {
+              setUserText("Explain why decentralization matters in Bitcoin.");
+              setUsedDefaultQuestion(true);
+            }}
+          >
+            Explain why decentralization matters in Bitcoin.
+          </YText>
+          <YText
+            fontType="h3"
+            fontWeight="light"
+            className={styles.QuestionText}
+            onClick={() => {
+              setUserText("What are block rewards?");
+              setUsedDefaultQuestion(true);
+            }}
+          >
+            What are block rewards?
+          </YText>
+        </>
+
         <YText
           fontType="h3"
           fontWeight="light"
@@ -83,6 +87,7 @@ const DemoPage: NextPage = () => {
   const playerRef = useRef<any>(null);
   const [playerTimestamp, setPlayerTimestamp] = useState(0);
   const [usedDefaultQuestion, setUsedDefaultQuestion] = useState(false);
+  const isMobileScreen = useMediaQuery({ query: "(max-width: 800px)" });
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -145,29 +150,10 @@ const DemoPage: NextPage = () => {
     return (
       <PageLayout
         limitWidth={false}
+        logo={false}
+        logoReplacementContent={<></>}
         rightContent={
           <div className={styles.TopNavBar}>
-            <YButton
-              label="Upload"
-              onClick={() => {
-                router.push("/videos?addNew=true");
-              }}
-            >
-              <div style={{ display: "flex", gap: "4px" }}>
-                <div
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    margin: "4px",
-                  }}
-                >
-                  <UploadIcon />
-                </div>
-                <YText fontColor="white" fontType="h3" wrap="nowrap">
-                  New Video
-                </YText>
-              </div>
-            </YButton>
             <YText
               fontType="h3"
               className={styles.Text}
@@ -205,34 +191,40 @@ const DemoPage: NextPage = () => {
       limitWidth={false}
       logo={false}
       logoReplacementContent={
-        <VideoTitle
-          title={demoVideo.video?.title as string}
-          url={demoVideo.video?.url as string}
-        />
+        !isMobileScreen ? (
+          <VideoTitle
+            title={demoVideo.video?.title as string}
+            url={demoVideo.video?.url as string}
+          />
+        ) : (
+          <></>
+        )
       }
       rightContent={
         <div className={styles.TopNavBar}>
-          <YButton
-            label="Upload"
-            onClick={() => {
-              router.push("/videos?addNew=true");
-            }}
-          >
-            <div style={{ display: "flex", gap: "4px" }}>
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  margin: "4px",
-                }}
-              >
-                <UploadIcon />
+          {!isMobileScreen && (
+            <YButton
+              label="Upload"
+              onClick={() => {
+                router.push("/videos?addNew=true");
+              }}
+            >
+              <div style={{ display: "flex", gap: "4px" }}>
+                <div
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    margin: "4px",
+                  }}
+                >
+                  <UploadIcon />
+                </div>
+                <YText fontColor="white" fontType="h3" wrap="nowrap">
+                  New Video
+                </YText>
               </div>
-              <YText fontColor="white" fontType="h3" wrap="nowrap">
-                New Video
-              </YText>
-            </div>
-          </YButton>
+            </YButton>
+          )}
           <YText
             fontType="h3"
             className={styles.Text}
@@ -253,15 +245,17 @@ const DemoPage: NextPage = () => {
             playerRef={playerRef}
             videoId={videoId as string}
           />
-          <TranscriptViewer
-            transcript={
-              demoVideo.video?.transcription as unknown as Array<ChunkGroup>
-            }
-            timestamp={playerTimestamp}
-          />
+          {!isMobileScreen && (
+            <TranscriptViewer
+              transcript={
+                demoVideo.video?.transcription as unknown as Array<ChunkGroup>
+              }
+              timestamp={playerTimestamp}
+            />
+          )}
         </div>
         <div className={styles.ChatSection}>
-          {messages.length === 0 && (
+          {messages.length === 0 && !isMobileScreen && (
             <DemoQuestions
               setUserText={setUserInput}
               generateResponse={generateResponse}

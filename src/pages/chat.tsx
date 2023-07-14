@@ -134,27 +134,29 @@ const ChatPage: NextPage = () => {
         limitWidth={false}
         rightContent={
           <div className={styles.TopNavBar}>
-            <YButton
-              label="Upload"
-              onClick={() => {
-                router.push("/videos?addNew=true");
-              }}
-            >
-              <div style={{ display: "flex", gap: "4px" }}>
-                <div
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    margin: "4px",
-                  }}
-                >
-                  <UploadIcon />
+            {!isMobileScreen && (
+              <YButton
+                label="Upload"
+                onClick={() => {
+                  router.push("/videos?addNew=true");
+                }}
+              >
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      margin: "4px",
+                    }}
+                  >
+                    <UploadIcon />
+                  </div>
+                  <YText fontColor="white" fontType="h3" wrap="nowrap">
+                    New Video
+                  </YText>
                 </div>
-                <YText fontColor="white" fontType="h3" wrap="nowrap">
-                  New Video
-                </YText>
-              </div>
-            </YButton>
+              </YButton>
+            )}
             <YText
               fontType="h3"
               className={styles.Text}
@@ -257,7 +259,7 @@ const ChatPage: NextPage = () => {
               void router.push("/videos");
             }}
           >
-            {isMobileScreen ? "Back to Videos →" : "Back to Videos →"}
+            Back to Videos →
           </YText>
         </div>
       }
