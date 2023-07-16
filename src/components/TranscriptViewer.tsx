@@ -42,6 +42,7 @@ export const TranscriptViewer = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (timestamp < 1) return;
     let idx = allSentences.findIndex(
       (s) => timestamp >= s.start && timestamp <= s.end
     );

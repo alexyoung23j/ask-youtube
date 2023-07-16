@@ -197,7 +197,7 @@ export default async function POST(req: Request) {
   const { stream, handlers } = LangChainStream();
 
   const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo-16k",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
     temperature: 0,

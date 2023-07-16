@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import styles from "@/styles/components/layout.module.scss";
 import { ReactNode } from "react";
+import { useMediaQuery } from "react-responsive";
 
 const PageLayout = ({
   logo = true,
@@ -19,6 +20,8 @@ const PageLayout = ({
   limitWidth?: boolean;
   topBar?: boolean;
 }) => {
+  const isMobileScreen = useMediaQuery({ query: "(max-width: 800px)" });
+
   return (
     <div className={styles.MainBody}>
       {topBar && (
@@ -28,7 +31,11 @@ const PageLayout = ({
               limitWidth ? styles.LimitWidth : ""
             }`}
           >
-            {logo ? <div>placeholder</div> : logoReplacementContent}
+            {logo && !isMobileScreen ? (
+              <div>placeholder</div>
+            ) : (
+              logoReplacementContent
+            )}
             {centerContent}
             {rightContent}
           </div>

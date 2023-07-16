@@ -84,7 +84,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     const transcriptionResp: PrerecordedTranscriptionResponse =
       (await deepgram.transcription.preRecorded(source, {
         smart_format: true,
-        model: "whisper",
+        model: "nova",
         video: true,
         punctuate: true,
         times: true,
