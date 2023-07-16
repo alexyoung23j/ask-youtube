@@ -208,7 +208,7 @@ const VideosPage: NextPage = () => {
         />
         <div className={styles.PageContent}>
           <div className={styles.HeaderText}>
-            <YText>Transcribed Videos</YText>
+            <YText>Videos</YText>
           </div>
 
           <div className={styles.ContentList}>

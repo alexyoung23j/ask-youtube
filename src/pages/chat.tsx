@@ -181,7 +181,6 @@ const ChatPage: NextPage = () => {
           }}
         >
           <YSpinner size="large" color="#a6a6a6" />
-          <YText fontType="h3">Loading.. Try again soon.</YText>
         </div>
       </PageLayout>
     );
