@@ -51,6 +51,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
     stream = ytdl(videoUrl, {
       quality: "lowestaudio",
       filter: "audioonly",
+      IPv6Block: "",
     });
   } catch (e) {
     console.log(e);
@@ -89,6 +90,7 @@ export const transcriptionJob = async (req: Request, res: Response) => {
         punctuate: true,
         times: true,
         paragraphs: true,
+        diarize: true,
       })) as PrerecordedTranscriptionResponse;
     console.log("transcription complete", new Date());
 
