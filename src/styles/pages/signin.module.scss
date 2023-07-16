@@ -1,0 +1,63 @@
+@import "/src/styles/shared";
+
+.SignIn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: $tertiary-light;
+
+  .Section {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+
+    .WideButton {
+      width: 100%;
+    }
+  }
+
+  .ProviderButton {
+    display: flex;
+    padding: 10px 12px;
+    border: 1px solid $border-primary;
+    border-radius: 4px;
+    justify-content: space-between;
+    cursor: pointer;
+    background-color: white;
+  }
+}
+
+.Card {
+  background-color: $secondary-light;
+  border-radius: 4px;
+  border: 1px solid $border-primary;
+  max-width: 510px;
+
+  padding: 15px;
+
+  .CardHeader {
+    display: flex;
+    align-items: flex-start;
+    font-weight: 400 !important;
+  }
+
+  .CardContent {
+    display: flex;
+    gap: 15px;
+    flex-direction: column;
+    width: 300px;
+    margin-top: 10px;
+
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+.Error {
+  color: $primary-red !important;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}

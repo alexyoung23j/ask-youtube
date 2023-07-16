@@ -29,6 +29,8 @@ export const env = createEnv({
     CLOUD_FUNCTION_URL: z.string(),
     EMBEDDING_DB_URL: z.string(),
     EMBEDDING_DB_KEY: z.string(),
+    GITHUB_ID: z.string(),
+    GITHUB_SECRET: z.string(),
   },
 
   /**
@@ -57,6 +59,8 @@ export const env = createEnv({
     CLOUD_FUNCTION_URL: process.env.CLOUD_FUNCTION_URL,
     EMBEDDING_DB_URL: process.env.EMBEDDING_DB_URL,
     EMBEDDING_DB_KEY: process.env.EMBEDDING_DB_KEY,
+    GITHUB_ID: process.env.GITHUB_ID,
+    GITHUB_SECRET: process.env.GITHUB_SECRET,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

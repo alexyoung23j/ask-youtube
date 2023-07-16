@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import styles from "@/styles/components/layout.module.scss";
 import { ReactNode } from "react";
 
@@ -8,6 +9,7 @@ const PageLayout = ({
   rightContent,
   children,
   limitWidth = true,
+  topBar = true,
 }: {
   logo?: boolean;
   logoReplacementContent?: JSX.Element;
@@ -15,19 +17,23 @@ const PageLayout = ({
   rightContent?: JSX.Element;
   children?: ReactNode | undefined;
   limitWidth?: boolean;
+  topBar?: boolean;
 }) => {
   return (
     <div className={styles.MainBody}>
-      <div className={styles.TopBar}>
-        <div
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          className={`${styles.Content} ${limitWidth ? styles.LimitWidth : ""}`}
-        >
-          {logo ? <div>placeholder</div> : logoReplacementContent}
-          {centerContent}
-          {rightContent}
+      {topBar && (
+        <div className={styles.TopBar}>
+          <div
+            className={`${styles.Content} ${
+              limitWidth ? styles.LimitWidth : ""
+            }`}
+          >
+            {logo ? <div>placeholder</div> : logoReplacementContent}
+            {centerContent}
+            {rightContent}
+          </div>
         </div>
-      </div>
+      )}
       <div className={styles.Children}>{children}</div>
     </div>
   );

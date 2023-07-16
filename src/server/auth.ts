@@ -5,6 +5,7 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
+import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
@@ -50,6 +51,10 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+    }),
+    GitHubProvider({
+      clientId: env.GITHUB_ID,
+      clientSecret: env.GITHUB_SECRET,
     }),
     /**
      * ...add more providers here.

@@ -10,7 +10,7 @@ type FontWeight =
   | "bold"
   | "italic"
   | "underline";
-export type FontColor = "white" | "black" | "grey";
+export type FontColor = "white" | "black" | "grey" | "light-grey";
 
 export type FontType =
   | "large"
