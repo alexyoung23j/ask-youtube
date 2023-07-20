@@ -32,11 +32,7 @@ const Home: NextPage = () => {
         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
       </Head>
       <div style={{ height: "2000px" }}>
-        Hi
-        <YButton
-          onClick={sessionData ? () => void signOut() : () => void signIn()}
-          label={sessionData ? "Sign out" : "Sign in"}
-        ></YButton>
+        Hi I am temporary
         <YButton
           onClick={() => {
             router.push("/demo");

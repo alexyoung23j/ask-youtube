@@ -50,7 +50,6 @@ const VideosPage: NextPage = () => {
       (video) => video.transcription !== null
     );
     if (!allTranscriptionsCompleted) {
-      console.log("refetching videos...");
       intervalId = setInterval(() => {
         refetch(); // assuming `refetch` is defined and updates `videos` state.
       }, 2000);
