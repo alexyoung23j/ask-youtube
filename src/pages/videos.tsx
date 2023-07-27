@@ -274,10 +274,8 @@ const VideosPage: NextPage = () => {
                     showEdit={false}
                     showDelete={true}
                     onDeleteClick={() => {
-                      if (video.transcription !== null) {
-                        setDeleteModalOpen(true);
-                        setDeleteUrl(video.url);
-                      }
+                      setDeleteModalOpen(true);
+                      setDeleteUrl(video.url);
                     }}
                     onIconClick={() => {
                       window.open(video.url, "_blank");
