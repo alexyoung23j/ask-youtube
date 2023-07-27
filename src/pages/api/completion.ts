@@ -107,9 +107,6 @@ export default async function POST(req: Request) {
     messages: Array<{ sender: string; content: string }>;
   } = await req.json();
 
-  // Load in documents
-  console.log("starting vector search, ", new Date());
-
   const supabaseClient = createSupabaseClient(
     process.env.EMBEDDING_DB_URL as string,
     process.env.EMBEDDING_DB_KEY as string
@@ -128,8 +125,6 @@ export default async function POST(req: Request) {
     (await vectorStore.similaritySearchWithScore(inputText, 5, {
       url: url,
     })) as Array<[Document<DocumentMetadata>, number]>;
-
-  console.log("finished similarity search", new Date());
 
   const parsedDocumentMap = buildDocumentsForPrompt({
     documents: relevantDocuments,
@@ -156,7 +151,7 @@ export default async function POST(req: Request) {
         
         Use the following transcript sections from the video, along with your general knowledge of the subject as an extremely intelligent,
         unbiased, and well informed person, to answer the users question. If the transcript sections are not enough to answer the question,
-        answer with your general knowledge of the subject.
+        answer with your general knowledge of the subject. But make sure to mention that you are using your general knowledge and not the transcripts.
         ----------------
         {context}
          
@@ -164,7 +159,7 @@ export default async function POST(req: Request) {
         Do not answer generically- you can assume that the human is asking a question that is related to the transcripts provided or the chat history. 
 
         {format_instructions}
-        Be talkative, verbose, and specific! Offer more additional context than was asked for. 
+        Be talkative, verbose, and specific! Offer more additional context than was asked for.
 
         Human Question: {input}
         AI Answer, formatted as JSON as describe above: `;
@@ -224,7 +219,7 @@ export default async function POST(req: Request) {
       [
         {
           handleLLMError: (err) => {
-            console.log("er here", err);
+            console.log("error in chain call: ", err);
           },
         },
       ]

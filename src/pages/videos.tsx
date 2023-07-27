@@ -76,13 +76,13 @@ const VideosPage: NextPage = () => {
       setUploadUrlError("");
       const parsedUrl = parseYouTubeURL(videoUrl);
       const video = await generateTranscription.mutateAsync({ url: parsedUrl });
+      refetch();
       setUploadModalOpen(false);
       setUrl("");
-      refetch();
 
       setTimeout(() => {
         refetch();
-      }, 5000);
+      }, 3000);
     } catch (e: any) {
       console.log(e.message);
       setUploadUrlError(e.message as string);
