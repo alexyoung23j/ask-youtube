@@ -126,6 +126,7 @@
   overflow-y: auto;
   @include smallScrollbar;
   padding: 0px 20px;
+  color: $darkest-grey;
 
   .Highlighted {
     background-color: lighten($primary-red, 30%);
