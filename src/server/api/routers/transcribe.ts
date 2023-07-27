@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+
 import { z } from "zod";
 import {
   createTRPCRouter,
@@ -58,13 +60,13 @@ function parseYoutubeTranscript(transcript: {
         );
         const text = textChunk?._
           ? // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            (he.decode(textChunk._) as string)
+            he.decode(textChunk._)
           : ("" as string);
 
-        sentence.text += text + " ";
+        sentence.text += (text as string) + " ";
         sentence.start = sentence.start === 0 ? start : sentence.start;
         sentence.end = end;
-        chunkGroup.num_words += text.split(" ").length;
+        chunkGroup.num_words += (text as string).split(" ").length;
       }
 
       sentence.text = sentence.text.trim();
