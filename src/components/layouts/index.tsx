@@ -31,11 +31,7 @@ const PageLayout = ({
               limitWidth ? styles.LimitWidth : ""
             }`}
           >
-            {logo && !isMobileScreen ? (
-              <div>placeholder</div>
-            ) : (
-              logoReplacementContent
-            )}
+            {logo && !isMobileScreen ? <div></div> : logoReplacementContent}
             {centerContent}
             {rightContent}
           </div>
