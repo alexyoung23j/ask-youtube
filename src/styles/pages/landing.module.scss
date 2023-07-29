@@ -1,0 +1,63 @@
+@import "/src/styles/shared";
+
+.LandingPage {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+
+  .SectionOne {
+    background-color: $tertiary-light;
+    height: 100%;
+    width: 100%;
+    padding: 5em 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .Header {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+
+      .HeaderText {
+        font-size: 50px;
+        margin-bottom: 15px;
+
+        .YoutubeWord {
+          background-color: $primary-red;
+          padding: 2px 16px;
+          color: white;
+          border-radius: 20px;
+          font-size: 46px;
+        }
+      }
+
+      .SubtitleText {
+        font-size: 18px;
+        font-style: light;
+      }
+
+      .CTASection {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 60px;
+      }
+    }
+
+    .VideoSection {
+      display: flex;
+      position: relative;
+      width: 80%;
+      max-width: 1000px;
+      font-weight: 400px;
+    }
+  }
+}
+
+.Text {
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
