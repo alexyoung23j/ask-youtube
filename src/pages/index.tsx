@@ -48,7 +48,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
       </Head>
-      <div className={baskerville.className}>
+      <div className={baskerville.className} style={{ overflow: "hidden" }}>
         <div className={styles.LandingPage}>
           <div className={styles.SectionOne}>
             <div className={styles.Header}>
@@ -59,9 +59,9 @@ const Home: NextPage = () => {
               <div
                 style={{
                   display: "flex",
-                  gap: "4px",
+                  gap: "6px",
                   flexDirection: "column",
-                  marginBottom: "25px",
+                  marginBottom: "35px",
                 }}
               >
                 <YText className={styles.SubtitleText} fontWeight="light">
@@ -101,6 +101,7 @@ const Home: NextPage = () => {
                 src={
                   "https://zdkeniqritfgbdjlcccf.supabase.co/storage/v1/object/public/Ask%20Youtube%20Assets/FinalDemo.mp4?t=2023-07-29T04%3A11%3A01.010Z"
                 }
+                poster="https://zdkeniqritfgbdjlcccf.supabase.co/storage/v1/object/public/Ask%20Youtube%20Assets/video-capture-1046.png"
               ></video>
             </div>
           </div>
