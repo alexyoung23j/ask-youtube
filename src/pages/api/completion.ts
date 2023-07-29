@@ -195,7 +195,7 @@ export default async function POST(req: Request) {
     modelName: "gpt-3.5-turbo-16k",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
-    temperature: 0,
+    temperature: 0.1,
   });
 
   const chain = new ConversationChain({
