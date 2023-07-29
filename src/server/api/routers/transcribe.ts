@@ -173,12 +173,20 @@ async function writeEmbeddingDocuments(
     process.env.EMBEDDING_DB_KEY as string
   );
 
+  console.log("Writing documents to Supabase: ", videoUrl, new Date());
+
   try {
     await SupabaseVectorStore.fromDocuments(documents, new OpenAIEmbeddings(), {
       client: supabaseClient,
       tableName: "documents",
       queryName: "match_documents",
     });
+    console.log(
+      "Finished writing documents to Supabase: ",
+      videoUrl,
+      new Date()
+    );
+
     await callback(videoUrl);
   } catch (e) {
     console.log(e);
