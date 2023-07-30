@@ -31,6 +31,7 @@ export const env = createEnv({
     EMBEDDING_DB_KEY: z.string(),
     GITHUB_ID: z.string(),
     GITHUB_SECRET: z.string(),
+    USE_DEEPGRAM_DEFAULT: z.string(),
   },
 
   /**
@@ -61,6 +62,7 @@ export const env = createEnv({
     EMBEDDING_DB_KEY: process.env.EMBEDDING_DB_KEY,
     GITHUB_ID: process.env.GITHUB_ID,
     GITHUB_SECRET: process.env.GITHUB_SECRET,
+    USE_DEEPGRAM_DEFAULT: process.env.USE_DEEPGRAM_DEFAULT,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.

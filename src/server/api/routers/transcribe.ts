@@ -286,6 +286,14 @@ export const transcriptionRouter = createTRPCRouter({
           },
         });
 
+        if (process.env.USE_DEEPGRAM_DEFAULT === "true") {
+          void axios.post(process.env.CLOUD_FUNCTION_URL as string, {
+            url: parsedUrl,
+          });
+          console.log("fired off transcription job", new Date());
+          return newVideo;
+        }
+
         // Try to use the existing video transcript
         try {
           const transcript = await getYoutubeTranscript(videoInfo);
