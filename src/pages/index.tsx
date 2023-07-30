@@ -78,6 +78,7 @@ const Home: NextPage = () => {
                   onClick={() => {
                     void router.push("/videos");
                   }}
+                  className={styles.CTAButton}
                 />
                 <YText
                   fontType="h3"
@@ -102,6 +103,18 @@ const Home: NextPage = () => {
                 }
                 poster="https://zdkeniqritfgbdjlcccf.supabase.co/storage/v1/object/public/Ask%20Youtube%20Assets/video-capture-1046.png"
               ></video>
+            </div>
+            <div className={styles.CTA2Section}>
+              <YText className={styles.Subtitle2Text} fontWeight="light">
+                Stop using the comments section to find the timestamps you need.
+              </YText>
+
+              <YButton
+                label="Get Started"
+                onClick={() => {
+                  void router.push("/videos");
+                }}
+              />
             </div>
           </div>
         </div>

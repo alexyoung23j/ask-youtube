@@ -71,8 +71,8 @@ const HistoryContainer = ({
             fontWeight="light"
             className={styles.TextContainer}
           >
-            {leftLabelOne.length > 50
-              ? `${leftLabelOne.substring(0, 47)}...`
+            {leftLabelOne.length > 30
+              ? `${leftLabelOne.substring(0, 27)}...`
               : leftLabelOne}
           </YText>
           {transcribing ? (
