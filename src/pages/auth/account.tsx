@@ -85,6 +85,7 @@ const AccountPage = () => {
 
   return (
     <PageLayout
+      limitWidth={false}
       rightContent={
         <div className={styles.TopNavBar}>
           <YText

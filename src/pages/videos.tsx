@@ -166,6 +166,7 @@ const VideosPage: NextPage = () => {
           </YText>
         </div>
       }
+      limitWidth={false}
     >
       <div className={styles.VideosPage}>
         <YModal
