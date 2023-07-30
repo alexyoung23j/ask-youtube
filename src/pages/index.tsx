@@ -66,11 +66,10 @@ const Home: NextPage = () => {
               >
                 <YText className={styles.SubtitleText} fontWeight="light">
                   Question videos, unearth insights, and uncover the best
-                  moments with precision.
+                  moments with blazing speed.
                 </YText>
                 <YText className={styles.SubtitleText} fontWeight="light">
-                  A powerful tool for studying and researching with blazing
-                  speed.
+                  A powerful AI tool for efficient studying and research.
                 </YText>
               </div>
               <div className={styles.CTASection}>

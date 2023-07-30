@@ -9,6 +9,18 @@ import { v4 as uuidv4 } from "uuid";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { z } from "zod";
 
+function removeNewLines(text: string) {
+  // Utility to remove newlines which cause weird JSON problems
+  const firstTen = text.substring(0, 10);
+  const index = text.indexOf("usedTimestamps") ?? text.length - 12;
+  let middle = text.substring(10, index - 10);
+  const lastTen = text.substring(index - 10);
+
+  middle = middle.replace(/\n/g, "\\n");
+
+  return firstTen + middle + lastTen;
+}
+
 // Hook for handling all chat functionality
 const useYoutubeChat = ({ id }: { id: string }) => {
   const [userInput, setUserInput] = useState("");
@@ -76,7 +88,7 @@ const useYoutubeChat = ({ id }: { id: string }) => {
       );
 
       try {
-        parsedText = await parser.parse(text);
+        parsedText = await parser.parse(removeNewLines(text));
       } catch (e) {
         console.log({ text });
         console.log(e);

@@ -46,17 +46,6 @@ const DemoQuestions = ({
             fontWeight="light"
             className={styles.QuestionText}
             onClick={() => {
-              setUserText("Explain why decentralization matters in Bitcoin.");
-              setUsedDefaultQuestion(true);
-            }}
-          >
-            Explain why decentralization matters in Bitcoin.
-          </YText>
-          <YText
-            fontType="h3"
-            fontWeight="light"
-            className={styles.QuestionText}
-            onClick={() => {
               setUserText("What are block rewards?");
               setUsedDefaultQuestion(true);
             }}
@@ -70,11 +59,23 @@ const DemoQuestions = ({
           fontWeight="light"
           className={styles.QuestionText}
           onClick={() => {
-            setUserText("What is proof of work?");
+            setUserText("What is proof of work and why is it needed?");
             setUsedDefaultQuestion(true);
           }}
         >
           What is proof of work and why is it needed?
+        </YText>
+
+        <YText
+          fontType="h3"
+          fontWeight="light"
+          className={styles.QuestionText}
+          onClick={() => {
+            setUserText(" What is SHA256?");
+            setUsedDefaultQuestion(true);
+          }}
+        >
+          What is SHA256?
         </YText>
       </div>
     </div>

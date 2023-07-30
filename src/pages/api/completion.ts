@@ -126,6 +126,8 @@ export default async function POST(req: Request) {
       url: url,
     })) as Array<[Document<DocumentMetadata>, number]>;
 
+  console.log(relevantDocuments);
+
   const parsedDocumentMap = buildDocumentsForPrompt({
     documents: relevantDocuments,
     transcript: transcription,
@@ -195,7 +197,7 @@ export default async function POST(req: Request) {
     modelName: "gpt-3.5-turbo-16k",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers(handlers),
-    temperature: 0.1,
+    temperature: 0,
   });
 
   const chain = new ConversationChain({
