@@ -4,6 +4,14 @@ import { ReactNode } from "react";
 import { useMediaQuery } from "react-responsive";
 import { Logo } from "../icons";
 import { useRouter } from "next/router";
+import { Libre_Baskerville } from "@next/font/google";
+
+const baskerville = Libre_Baskerville({
+  weight: ["400", "700"],
+  style: ["normal"],
+  display: "block",
+  subsets: ["latin"],
+});
 
 const PageLayout = ({
   logo = true,
@@ -35,13 +43,16 @@ const PageLayout = ({
             }`}
           >
             {logo && !isMobileScreen ? (
-              <div
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  void router.push("/");
-                }}
-              >
-                <Logo />
+              <div className={baskerville.className}>
+                <div
+                  className={styles.LogoSection}
+                  onClick={() => {
+                    void router.push("/");
+                  }}
+                >
+                  <Logo />
+                  <div style={{ fontSize: "18px" }}>askyoutube</div>
+                </div>
               </div>
             ) : (
               logoReplacementContent
