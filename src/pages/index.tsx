@@ -74,7 +74,7 @@ const Home: NextPage = () => {
               </div>
               <div className={styles.CTASection}>
                 <YButton
-                  label="Get Started Now"
+                  label="Get started now"
                   onClick={() => {
                     void router.push("/videos");
                   }}
@@ -87,7 +87,7 @@ const Home: NextPage = () => {
                     void router.push("/demo");
                   }}
                 >
-                  Try the Demo →
+                  Try the demo →
                 </YText>
               </div>
             </div>
@@ -110,7 +110,7 @@ const Home: NextPage = () => {
               </YText>
 
               <YButton
-                label="Get Started"
+                label="Get started for free"
                 onClick={() => {
                   void router.push("/videos");
                 }}
