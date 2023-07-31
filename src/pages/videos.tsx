@@ -82,7 +82,7 @@ const VideosPage: NextPage = () => {
 
       setTimeout(() => {
         refetch();
-      }, 3000);
+      }, 1000);
     } catch (e: any) {
       console.log(e.message);
       setUploadUrlError(e.message as string);
