@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { type NextPage } from "next";
-import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
-import { api } from "~/utils/api";
-import { useEffect, useState } from "react";
-import { useChat, useCompletion } from "ai/react";
-import useCustomCompletion from "~/hooks/useCustomCompletion";
 import { useRouter } from "next/router";
 import PageLayout from "~/components/layouts";
 import YText from "~/components/YText";

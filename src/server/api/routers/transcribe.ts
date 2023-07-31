@@ -151,21 +151,23 @@ async function writeEmbeddingDocuments(
       continue;
     }
 
-    for (let j = 0; j < paragraph.sentences.length; j++) {
-      const sentence = paragraph.sentences[j];
-      documents.push(
-        new Document({
-          metadata: {
-            start: sentence?.start,
-            url: videoUrl,
-            end: sentence?.end,
-            paragraphIndex: i,
-            sentenceIndex: j,
-          },
-          pageContent: sentence?.text as string,
-        })
-      );
-    }
+    const sentences = paragraph.sentences
+      .map((sentence) => {
+        return sentence.text;
+      })
+      .join(" ");
+
+    documents.push(
+      new Document({
+        metadata: {
+          start: paragraph?.start,
+          url: videoUrl,
+          end: paragraph?.end,
+          paragraphIndex: i,
+        },
+        pageContent: sentences as string,
+      })
+    );
   }
 
   const supabaseClient = createSupabaseClient(
