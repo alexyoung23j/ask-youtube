@@ -37,7 +37,6 @@ export const runtime = "edge";
 interface DocumentMetadata {
   paragraphIndex: number;
   start: number;
-  sentenceIndex: number;
   [key: string]: any;
 }
 
@@ -48,46 +47,25 @@ type DocumentEntry = {
 };
 
 const buildDocumentsForPrompt = ({
-  transcript,
   documents,
 }: {
-  transcript: Array<{ sentences: Array<{ text: string }> }>;
   documents: Array<[Document<DocumentMetadata>, number]>;
 }): DocumentEntry[] => {
-  const result: Map<string, DocumentEntry> = new Map();
+  const result: Array<DocumentEntry> = [];
 
   documents.forEach(([document, _]) => {
     const paragraphIndex = document.metadata.paragraphIndex;
     const startTime = document.metadata.start;
-    const sentenceIndex = document.metadata.sentenceIndex;
 
-    const correspondingTranscript = transcript[paragraphIndex];
-
-    if (correspondingTranscript) {
-      const sentences = correspondingTranscript.sentences;
-      const startIdx = Math.max(0, sentenceIndex - 3);
-      const endIdx = Math.min(sentences.length, sentenceIndex + 4);
-      const selectedSentences = sentences.slice(startIdx, endIdx);
-
-      let paragraphText = `TRANSCRIPT TIMESTAMP: ${startTime} DOCUMENT: `;
-      selectedSentences.forEach((sentence, idx) => {
-        paragraphText += `${sentence.text} `;
-      });
-
-      // Concatenate the paragraphIndex and snippetStartTime to form a unique key
-      const key = `${paragraphIndex}-${startTime}`;
-
-      // Update the map, ensuring uniqueness
-      result.set(key, {
-        paragraphIndex: paragraphIndex,
-        paragraphText: paragraphText.trim(),
-        snippetStartTime: startTime,
-      });
-    }
+    const paragraphText = `TRANSCRIPT TIMESTAMP: ${startTime} DOCUMENT: ${document.pageContent}`;
+    result.push({
+      paragraphIndex: paragraphIndex,
+      paragraphText: paragraphText.trim(),
+      snippetStartTime: startTime,
+    });
   });
 
-  // Convert the Map values to an array
-  return Array.from(result.values());
+  return result;
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
@@ -122,15 +100,12 @@ export default async function POST(req: Request) {
   );
 
   const relevantDocuments: Array<[Document<DocumentMetadata>, number]> =
-    (await vectorStore.similaritySearchWithScore(inputText, 5, {
+    (await vectorStore.similaritySearchWithScore(inputText, 4, {
       url: url,
     })) as Array<[Document<DocumentMetadata>, number]>;
 
-  console.log(relevantDocuments);
-
   const parsedDocumentMap = buildDocumentsForPrompt({
     documents: relevantDocuments,
-    transcript: transcription,
   });
 
   // check if we have previous conversation history, if so, use it.
