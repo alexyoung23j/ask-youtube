@@ -63,7 +63,7 @@ const Home: NextPage = () => {
                   moments with blazing speed.
                 </YText>
                 <YText className={styles.SubtitleText} fontWeight="light">
-                  A powerful AI tool for efficient studying and research.
+                  A powerful AI tool for efficient study and research.
                 </YText>
               </div>
               <div className={styles.CTASection}>
