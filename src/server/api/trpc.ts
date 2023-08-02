@@ -142,7 +142,7 @@ const enforceUserUploadLimit = t.middleware(async ({ ctx, next }) => {
 
   if (
     (!stripeCustomer || stripeSubscription?.status !== "active") &&
-    numVideosUploaded > 100
+    numVideosUploaded > 5
   ) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
