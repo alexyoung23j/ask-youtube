@@ -57,10 +57,10 @@ const PricingWidget = ({ hasSubscription }: { hasSubscription: boolean }) => {
                 - No chat limit
               </YText>
               <YText fontType="h4" className={styles.FeatureText}>
-                - Fast transcriptions
+                - Faster transcriptions
               </YText>
               <YText fontType="h4" className={styles.FeatureText}>
-                - 2 hour video limit
+                - 2.5 hour video limit
               </YText>
             </div>
           </div>
